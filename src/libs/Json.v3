@@ -1,0 +1,17 @@
+type JsonValue {
+  case String(v: string);
+  case Number(v: float);
+  case Bool(v: bool);
+  case Null;
+  case JArray(v: Array<JsonValue>);
+  case JObject(v: HashMap<string, JsonValue>);
+}
+
+enum JsonError(desc: string) {
+  KeyNotFound("Key not found"),
+}
+
+type JsonValueResult<T> {
+  case Result(v: T);
+  case Error();
+}
