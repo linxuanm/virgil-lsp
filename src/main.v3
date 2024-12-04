@@ -1,8 +1,9 @@
 def main() -> int {
+  var log = System.fileOpen("log.txt", false);
+  
   while (true) {
     var s = Transport.readline(0);
-    System.puts(s);
-    System.puts("\n");
+    System.write(log, Strings.format1("%s\n", s));
   }
   return 0;
 }
