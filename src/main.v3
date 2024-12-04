@@ -1,3 +1,8 @@
 def main() -> int {
+  while (true) {
+    var s = System.fileRead(0);
+    if (s < 0) break;
+    System.puts(Strings.format1("%d\n", s));
+  }
   return 0;
 }
