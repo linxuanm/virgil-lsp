@@ -1,5 +1,6 @@
 def main() -> int {
   var log = System.fileOpen("log.txt", false);
+  System.write(log, "Program started\n");
   
   while (true) {
     var s = Transport.readline(0);
