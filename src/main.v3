@@ -1,5 +1,5 @@
 def main() -> int {
-  var log = System.fileOpen("log.txt", false);
+  var log = System.fileOpen("/home/linxuanm/workspace/virgil-lsp/new-log.txt", false);
   System.write(log, "Program started\n");
   
   while (true) {
