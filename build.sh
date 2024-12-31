@@ -31,4 +31,4 @@ MAIN="$SRC_PATH/main.v3"
 
 SOURCES="$V3_LIBS $LSP_LIBS $LIB_UTIL $MAIN"
 
-$V3C $SOURCES
+$V3C $SOURCES -program-name=virgil-lsp
