@@ -1,3 +1,7 @@
+component PacketFormat {
+	def HEADER_MAX_LEN = 50;
+}
+
 enum HeaderField(head: string) {
 	CONTENT_LENGTH("Content-Length"),
 	CONTENT_TYPE("Content-Type")
@@ -5,11 +9,12 @@ enum HeaderField(head: string) {
 
 class Packet {}
 
-class PacketParser(err: Error) {
+class PacketParser(e: Error) {
 
 	var pk_length: int;
 	var pk_type: string;
 	var fd: int;
+	var ok: bool;
 
 	new() { reset(); }
 
@@ -17,19 +22,50 @@ class PacketParser(err: Error) {
 		pk_length = -1;
 		pk_type = "utf-8";
 		fd = -1;
+		ok = true;
 	}
 
 	def parse(file_desc: int) -> Packet {
 		reset();
 		fd = file_desc;
 
-		
+
 
 		return null;
 	}
 
-	private def read_header() {
-		
+	// Reads a header. Returns true if there are more unread headers.
+	private def readHeader() -> bool {
+		var raw = Stream.readUntil(readC, "\r\n", PacketFormat.HEADER_MAX_LEN);
+		if (raw.length == 0) return false; // End of header section.
+		var header = RangeUtil.split(raw, ": ");
+		if (header.length != 2) return err(); // TODO: error;
+		var name = header[0], content = header[1];
+
+		if (Strings.equal(name, HeaderField.CONTENT_TYPE.head)) {
+			pk_type = content;
+			if (!Strings.equal(pk_type, "utf-8")) return err(); // TODO: error;
+		} else if (Strings.equal(name, HeaderField.CONTENT_LENGTH.head)) {
+			var res = Ints.parseDecimal(content, 0);
+			if (res.0 < 0) return err(); // TODO: error;
+			pk_length = res.1;
+		} else {
+			return err(); // TODO: error;
+		}
+
+		return true;
+	}
+
+	private def readC() -> byte {
+		var b = System.fileRead(fd);
+		if (b < 0) return err(); // TODO: error;
+		return byte.!(b);
+	}
+
+	private def err<T>() -> T {
+		ok = false;
+		var v: T;
+		return v;
 	}
 }
 

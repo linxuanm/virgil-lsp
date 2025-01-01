@@ -26,7 +26,7 @@ def main() -> int {
 	// }
 
 	var reader = MyReader.new("123456aabbcc13782");
-	var s = Stream.read_until(reader.read, "aabbcc", 20);
+	var s = Stream.readUntil(reader.read, "2", 20);
 	System.puts(s);
 	System.puts("\n");
 
