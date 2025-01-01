@@ -1,0 +1,13 @@
+component Stream {
+
+	// Read from {supplier} until {end} is encountered or {max} elements are read.
+	def read_until<T>(supplier: () -> T, end: Range<T>, max: int) -> Array<T> {
+		var out = Vector<T>.new();
+		for (i < max) {
+			out.put(supplier());
+			if (out.send(RangeUtil.endsWith(_, end))) break;
+		}
+		out.resize(out.length - end.length);
+		return out.extract();
+	}
+}

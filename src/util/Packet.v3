@@ -9,7 +9,6 @@ class PacketParser(err: Error) {
 
 	var pk_length: int;
 	var pk_type: string;
-
 	var fd: int;
 
 	new() { reset(); }
@@ -17,10 +16,14 @@ class PacketParser(err: Error) {
 	def reset() {
 		pk_length = -1;
 		pk_type = "utf-8";
+		fd = -1;
 	}
 
 	def parse(file_desc: int) -> Packet {
+		reset();
 		fd = file_desc;
+
+		
 
 		return null;
 	}
