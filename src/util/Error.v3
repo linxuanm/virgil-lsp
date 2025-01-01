@@ -1,0 +1,6 @@
+component Error {
+
+	def report(err: string) {
+		
+	}
+}

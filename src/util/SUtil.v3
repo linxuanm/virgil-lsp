@@ -1,0 +1,27 @@
+// Utility methods for string operations.
+
+component SUtil {
+
+	// Finds the first occurrence of {sub} in {src}, starting at {from}.
+	def find_subst(src: Range<byte>, sub: Range<byte>, from: int) -> int {
+		var len = sub.length;
+		for (i = from; i < src.length - sub.length + 1; i++) {
+			if (Ranges.equal(src[i ... (i + len)], sub)) return i;
+		}
+		return -1;
+	}
+
+	// Splits a string by {sep}.
+	def split(src: Range<byte>, sep: Range<byte>) -> Array<string> {
+		var out = Vector<string>.new();
+		var prev = 0;
+		var at = find_subst(src, sep, 0);
+		while (at != -1) {
+			out.put(Ranges.dup(src[prev ... at]));
+			prev = at + sep.length;
+			at = find_subst(src, sep, prev);
+		}
+		out.put(Ranges.dup(src[prev ...]));
+		return out.extract();
+	}
+}
