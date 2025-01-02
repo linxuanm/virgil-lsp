@@ -1,0 +1,4 @@
+// Denote an object that can be serialized into 
+class Serializable {}
+
+

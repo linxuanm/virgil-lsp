@@ -8,8 +8,5 @@ def main() -> int {
 	var res = p.parse(0);
 	var out = if(p.ok, res, p.err_msg);
 
-	server_log.puts(if(p.ok, "Read success\n", "Read failed\n"));
-	server_log.format1("%s\n", out);
-
   return 0;
 }
