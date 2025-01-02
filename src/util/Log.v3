@@ -1,0 +1,13 @@
+component LogManager {
+	var fd: int;
+	def initLogging(path: string) { fd = System.fileOpen(path, false); }
+	def closeLogging() { System.fileClose(fd); }
+}
+
+class Logger(name: string) {
+	private def write(s: string) { System.write(LogManager.fd, Strings.format2("[%s] %s\n", name, s)); }
+	def puts(s: string) { write(s); }
+	def format1<A>(f: string, a: A) { write(Strings.format1(f, a)); }
+	def format2<A, B>(f: string, a: A, b: B) { write(Strings.format2(f, a, b)); }
+	def format3<A, B, C>(f: string, a: A, b: B, c: C) { write(Strings.format3(f, a, b, c)); }
+}
