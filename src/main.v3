@@ -1,10 +1,12 @@
 def main() -> int {
-  var log = System.fileOpen("/home/linxuanm/workspace/virgil-lsp/new-log.txt", false);
+  var log = System.fileOpen("new-log.txt", false);
   System.write(log, "Program started\n");
   
-  while (true) {
-    var s = Transport.readline(0);
-    System.write(log, Strings.format1("%s\n", s));
-  }
+  var p = PacketParser.new();
+	var res = p.parse(0);
+	var out = if(p.ok, res, p.err_msg);
+
+	System.write(log, Strings.format1("%s\n", out));
+
   return 0;
 }

@@ -9,12 +9,13 @@ enum HeaderField(head: string) {
 
 class Packet {}
 
-class PacketParser(e: Error) {
+class PacketParser {
 
 	var pk_length: int;
 	var pk_type: string;
 	var fd: int;
 	var ok: bool;
+	var err_msg: string;
 
 	new() { reset(); }
 
@@ -25,13 +26,21 @@ class PacketParser(e: Error) {
 		ok = true;
 	}
 
-	def parse(file_desc: int) -> Packet {
+	def parse(file_desc: int) -> string {
 		reset();
 		fd = file_desc;
+		while (readHeader()) {
+			if (!ok) return null;
+		}
 
+		var payload = Vector<byte>.new();
+		for (i < pk_length) {
+			payload.put(readC());
+			if (!ok) return null;
+		}
+		var json = payload.extract();
 
-
-		return null;
+		return json;
 	}
 
 	// Reads a header. Returns true if there are more unread headers.
@@ -39,18 +48,18 @@ class PacketParser(e: Error) {
 		var raw = Stream.readUntil(readC, "\r\n", PacketFormat.HEADER_MAX_LEN);
 		if (raw.length == 0) return false; // End of header section.
 		var header = RangeUtil.split(raw, ": ");
-		if (header.length != 2) return err(); // TODO: error;
+		if (header.length != 2) return err("invalid header");
 		var name = header[0], content = header[1];
 
 		if (Strings.equal(name, HeaderField.CONTENT_TYPE.head)) {
 			pk_type = content;
-			if (!Strings.equal(pk_type, "utf-8")) return err(); // TODO: error;
+			if (!Strings.equal(pk_type, "utf-8")) return err("'Content-Type' only supports 'utf-8'");
 		} else if (Strings.equal(name, HeaderField.CONTENT_LENGTH.head)) {
 			var res = Ints.parseDecimal(content, 0);
-			if (res.0 < 0) return err(); // TODO: error;
+			if (res.0 < 0) return err("'Content-Length' header requires a number");
 			pk_length = res.1;
 		} else {
-			return err(); // TODO: error;
+			return err(Strings.format1("invalid header '%s'", name));
 		}
 
 		return true;
@@ -58,12 +67,13 @@ class PacketParser(e: Error) {
 
 	private def readC() -> byte {
 		var b = System.fileRead(fd);
-		if (b < 0) return err(); // TODO: error;
+		if (b < 0) return err("error reading packet bytes");
 		return byte.!(b);
 	}
 
-	private def err<T>() -> T {
+	private def err<T>(msg: string) -> T {
 		ok = false;
+		err_msg = msg;
 		var v: T;
 		return v;
 	}
