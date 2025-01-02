@@ -48,7 +48,7 @@ class PacketParser {
 		var raw = Stream.readUntil(readC, "\r\n", PacketFormat.HEADER_MAX_LEN);
 		if (raw.length == 0) return false; // End of header section.
 		var header = RangeUtil.split(raw, ": ");
-		if (header.length != 2) return err("invalid header");
+		if (header.length != 2) return err(Strings.format1("invalid header '%s'", raw));
 		var name = header[0], content = header[1];
 
 		if (Strings.equal(name, HeaderField.CONTENT_TYPE.head)) {
@@ -76,24 +76,5 @@ class PacketParser {
 		err_msg = msg;
 		var v: T;
 		return v;
-	}
-}
-
-component Transport {
-
-	def read_packet(fd: int) {
-		def HEADER_NAME_MAXLEN = HeaderField.CONTENT_LENGTH.head.length;
-		var header = Vector<byte>.new();
-		for (i < HEADER_NAME_MAXLEN + 1) {
-			var peek = System.fileRead(fd);
-			if (peek == ':') break;
-			header.put(byte.!(peek));
-		}
-
-		// skips the space after ':'
-		System.fileRead(fd);
-
-		var pk_length = -1;
-		var pk_type = "utf-8";
 	}
 }
