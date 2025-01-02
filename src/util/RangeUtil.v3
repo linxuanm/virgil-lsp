@@ -27,9 +27,11 @@ component RangeUtil {
 
 	// {String.endsWith} but more generic.
 	def endsWith<T>(src: Range<T>, end: Range<T>) -> bool {
-		if (src.length <= end.length) return false;
+		if (src.length < end.length) return false;
 		for (i < end.length) {
-			if (src[src.length - i - 1] != end[end.length - i - 1]) return false;
+			if (src[src.length - i - 1] != end[end.length - i - 1]) {
+				return false;
+			}
 		}
 		return true;
 	}

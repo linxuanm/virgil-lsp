@@ -7,28 +7,16 @@ class MyReader(s: string) {
 }
 
 def main() -> int {
-	
-	// System.puti(SUtil.find_subst("abcdef", "cde", 0));
-	// System.puts("\n");
-	// System.puti(SUtil.find_subst("abcdef", "cde", 2));
-	// System.puts("\n");
-	// System.puti(SUtil.find_subst("abcdef", "cde", 3));
-	// System.puts("\n");
-	// System.puti(SUtil.find_subst("abcdef", "a", 0));
-	// System.puts("\n");
+	var reader = MyReader.new("Content-Length: 5872\r\n\r\n");
+	var s = Stream.readUntil(reader.read, "\r\n", PacketFormat.HEADER_MAX_LEN);
+	System.puts(Strings.format2("Read[len=%d] %s\n", s.length, s));
+	System.puts(Strings.format1("Reader[i=%d]\n", reader.i));
 
-	// var out = StringUtil.split(" abc def  ghi", " ");
-	// for (i in out) {
-	// 	System.putc('\'');
-	// 	System.puts(i);
-	// 	System.putc('\'');
-	// 	System.puts("\n");
-	// }
-
-	var reader = MyReader.new("123456aabbcc13782");
-	var s = Stream.readUntil(reader.read, "2", 20);
-	System.puts(s);
 	System.puts("\n");
+
+	s = Stream.readUntil(reader.read, "\r\n", PacketFormat.HEADER_MAX_LEN);
+	System.puts(Strings.format2("Read[len=%d] %s\n", s.length, s));
+	System.puts(Strings.format1("Reader[i=%d]\n", reader.i));
 
 	return 0;
 }

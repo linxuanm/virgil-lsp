@@ -1,6 +1,6 @@
 [server] Language server started.
-[packet] Reading header: 'Content-Length: 5872'
-[packet] Reading header: '
+[packet] Reading header[len=20]: 'Content-Length: 5872'
+[packet] Reading header[len=48]: '
 {"jsonrpc":"2.0","id":0,"method":"initialize",'
 [server] Read failed
 
