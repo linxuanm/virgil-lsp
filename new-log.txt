@@ -1,4 +1,9 @@
-Program started
-Read failed
-invalid header '
+[server] Language server started.
+[packet] Reading header: 'Content-Length: 5872'
+[packet] Reading header: '
 {"jsonrpc":"2.0","id":0,"method":"initialize",'
+[server] Read failed
+
+[server] invalid header '
+{"jsonrpc":"2.0","id":0,"method":"initialize",'
+

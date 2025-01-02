@@ -46,7 +46,7 @@ class PacketParser(log: Logger) {
 	// Reads a header. Returns true if there are more unread headers.
 	private def readHeader() -> bool {
 		var raw = Stream.readUntil(readC, "\r\n", PacketFormat.HEADER_MAX_LEN);
-		log.format1("Reading header: '%s'", raw);
+		log.format2("Reading header[len=%d]: '%s'", raw.length, raw);
 		if (raw.length == 0) return false; // End of header section.
 		var header = RangeUtil.split(raw, ": ");
 		if (header.length != 2) return err(Strings.format1("invalid header '%s'", raw));
