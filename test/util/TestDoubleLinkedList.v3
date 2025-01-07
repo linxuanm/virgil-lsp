@@ -1,0 +1,8 @@
+def T = UnitTests.registerT("util:list", _, DoubleLinkedListTester.new, _);
+def X_ = void(
+	()
+);
+
+private class DoubleLinkedListTester(t: Tester) {
+	
+}
