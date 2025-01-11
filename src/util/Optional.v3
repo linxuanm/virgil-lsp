@@ -1,0 +1,30 @@
+type Optional<T> {
+	case None;
+	case Some(value: T);
+
+	def map<O>(f: T -> O) -> Optional<O> {
+		match (this) {
+			None => return Optional.None;
+			Some(v) => return Optional.Some(f(v));
+		}
+	}
+}
+
+type Either<A, B> {
+	case Left(value: A);
+	case Right(value: B);
+
+	def mapL<C>(f: A -> C) -> Either<C, B> {
+		match (this) {
+			Left(v) => return Either.Left(f(v));
+			Right(v) => return Either.Right(v);
+		}
+	}
+
+	def mapR<C>(f: B -> C) -> Either<A, C> {
+		match (this) {
+			Left(v) => return Either.Left(v);
+			Right(v) => return Either.Right(f(v));
+		}
+	}
+}

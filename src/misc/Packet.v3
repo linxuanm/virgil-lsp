@@ -48,7 +48,7 @@ class PacketParser(log: Logger) {
 		var raw = Stream.readUntil(readC, "\r\n", PacketFormat.HEADER_MAX_LEN);
 		log.format2("Reading header[len=%d]: '%s'", raw.length, raw);
 		if (raw.length == 0) return false; // End of header section.
-		var header = RangeUtil.split(raw, ": ");
+		var header = Strings.split(raw, ": ", -1);
 		if (header.length != 2) return err(Strings.format1("invalid header '%s'", raw));
 		var name = header[0], content = header[1];
 

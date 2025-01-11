@@ -5,4 +5,9 @@ def X_ = void(
 
 private class DoubleLinkedListTester(t: Tester) {
 	
+	def testValidList<T>(l: DoubleLinkedList<T>) {
+		var len = 0;
+		for (curr = l.L.next; curr != l.R; curr = curr.next) len++;
+		if (len != l.len) t.fail("");
+	}
 }

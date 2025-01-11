@@ -1,0 +1,73 @@
+class DoubleLinkedList<T> {
+	def L = DLLNode<T>.new(Generics.default<T>());
+	def R = DLLNode<T>.new(Generics.default<T>());
+	var len = 0;
+
+	new() {
+		L.next = R;
+		R.prev = L;
+	}
+
+	def begin() -> DLLNode<T> { return L.next; }
+	def end() -> DLLNode<T> { return R; }
+	def rbegin() -> DLLNode<T> { return R.prev; }
+	def rend() -> DLLNode<T> { return L; }
+
+	def empty() -> bool { return len == 0; }
+
+	def atN(index: int) -> DLLNode<T> {
+		for (c = begin(); c != end(); c = c.next) {
+			if (index-- == 0) return c;
+		}
+		return end();
+	}
+
+	// Delete {node} from list.
+	def deleteN(node: DLLNode<T>) {
+		node.prev.next = node.next;
+		node.next.prev = node.prev;
+		len--;
+	}
+
+	// Insert node at position {index}, or append to end if {index} out of bound.
+	def putN(index: int, node: DLLNode<T>) {
+		var c = L;
+		while (c != end() && index > 0) { c = c.next; index--; }
+		if (c == end()) c = rbegin();
+		insertAfterN(node, c);
+		len++;
+	}
+
+	def putAtBeginN(node: DLLNode<T>) { insertAfterN(node, L); len++; }
+	def putAtEndN(node: DLLNode<T>) { insertAfterN(node, R.prev); len++; }
+
+	def popBack() -> DLLNode<T> {
+		if (empty()) return null;
+		var last = R.prev;
+		deleteN(last);
+		return last;
+	}
+
+	def popFront() -> DLLNode<T> {
+		if (empty()) return null;
+		var first = L.next;
+		deleteN(first);
+		return first;
+	}
+
+	// Inserts {node} after {at}.
+	private def insertAfterN(node: DLLNode<T>, at: DLLNode<T>) {
+		at.next.prev = node;
+		node.next = at.next;
+		at.next = node;
+		node.prev = at;
+	}
+}
+
+class DLLNode<T> {
+	var prev: DLLNode<T>;
+	var next: DLLNode<T>;
+	var elem: T;
+
+	new(elem) {}
+}
