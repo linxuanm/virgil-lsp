@@ -1,13 +1,64 @@
 def T = UnitTests.registerT("util:list", _, DoubleLinkedListTester.new, _);
 def X_ = void(
+	T("empty", test_empty),
+	T("at", test_at),
+	T("delete", test_delete),
+	T("put", test_put),
+	T("put", test_pop),
+	T("misc", test_misc),
 	()
 );
 
 private class DoubleLinkedListTester(t: Tester) {
 	
-	def testValidList<T>(l: DoubleLinkedList<T>) {
-		var len = 0;
-		for (curr = l.L.next; curr != l.R; curr = curr.next) len++;
-		if (len != l.len) t.fail("");
+	private def testValidList<T>(l: DoubleLinkedList<T>) {
+		var data = Vector<DLLNode<T>>.new();
+		for (curr = l.L.next; curr != l.R; curr = curr.next) data.put(curr);
+		if (data.length != l.len) {
+			return t.fail2("DLL of length %d has %d elements", l.len, data.length);
+		}
+		var ptr = l.R.prev;
+		for (i = data.length - 1; i >= 0; i--) {
+			t.assert_eq(data[i], ptr);
+			ptr = ptr.prev;
+		}
+		t.assert_eq(ptr, l.L);
 	}
+
+	def testEq<T>(l: DoubleLinkedList<T>, expected: Array<T>, render: (StringBuilder, T) -> StringBuilder) {
+		testValidList(l);
+		t.asserta("DLL", expected, l.extract(), render);
+	}
+}
+
+def test_empty(t: DoubleLinkedListTester) {
+	t.testEq<int>(DoubleLinkedList<int>.new(), [], StringBuilder.putd_i32);
+	t.testEq<string>(DoubleLinkedList<string>.new(), [], StringBuilder.puts);
+	t.testEq<int>(DoubleLinkedLists.from<int>([]), [], StringBuilder.putd_i32);
+	t.testEq<string>(DoubleLinkedLists.from<string>([]), [], StringBuilder.puts);
+
+	var xs = DoubleLinkedList<int>.new();
+	for (i < 3) xs.putAtEnd(i);
+	for (i < 3) xs.popFront();
+	t.testEq<int>(xs, [], StringBuilder.putd_i32);
+}
+
+def test_at(t: DoubleLinkedListTester) {
+	
+}
+
+def test_delete(t: DoubleLinkedListTester) {
+	
+}
+
+def test_put(t: DoubleLinkedListTester) {
+	
+}
+
+def test_pop(t: DoubleLinkedListTester) {
+	
+}
+
+def test_misc(t: DoubleLinkedListTester) {
+	
 }

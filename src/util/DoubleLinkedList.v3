@@ -41,19 +41,37 @@ class DoubleLinkedList<T> {
 	def putAtBeginN(node: DLLNode<T>) { insertAfterN(node, L); len++; }
 	def putAtEndN(node: DLLNode<T>) { insertAfterN(node, R.prev); len++; }
 
-	def popBack() -> DLLNode<T> {
+	def popBackN() -> DLLNode<T> {
 		if (empty()) return null;
 		var last = R.prev;
 		deleteN(last);
 		return last;
 	}
 
-	def popFront() -> DLLNode<T> {
+	def popFrontN() -> DLLNode<T> {
 		if (empty()) return null;
 		var first = L.next;
 		deleteN(first);
 		return first;
 	}
+
+	def forEach<D>(f: T -> D) {
+		for (curr = L.next; curr != R; curr = curr.next) f(curr.elem);
+	}
+
+	def extract() -> Array<T> {
+		var v = Vector<T>.new();
+		forEach(v.put);
+		return v.extract();
+	}
+
+	// Shortcuts for operations with elem.
+	def at(index: int) -> T { return atN(index).elem; }
+	def put(index: int, v: T) { putN(index, DLLNode.new(v)); }
+	def putAtBegin(v: T) { putAtBeginN(DLLNode.new(v)); }
+	def putAtEnd(v: T) { putAtEndN(DLLNode.new(v)); }
+	def popBack() -> T { return popBackN().elem; }
+	def popFront() -> T { return popFrontN().elem; }
 
 	// Inserts {node} after {at}.
 	private def insertAfterN(node: DLLNode<T>, at: DLLNode<T>) {
@@ -70,4 +88,13 @@ class DLLNode<T> {
 	var elem: T;
 
 	new(elem) {}
+}
+
+component DoubleLinkedLists {
+
+	def from<T>(v: Range<T>) -> DoubleLinkedList<T> {
+		var xs = DoubleLinkedList<T>.new();
+		for (i < v.length) xs.putAtEnd(v[i]);
+		return xs;
+	}
 }

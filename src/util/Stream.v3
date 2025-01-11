@@ -1,4 +1,4 @@
-component Stream {
+component Streams {
 
 	// Read from {supplier} until {end} is encountered or {max} elements are read.
 	def readUntil<T>(supplier: () -> byte, end: Range<byte>, max: int) -> Array<byte> {
