@@ -1,10 +1,4 @@
 // Temporary replacements to stdlib functions before they get merged by Virgil.
 component TempPatches {
-	def endsWith<T>(range: Range<T>, end: Range<T>) -> bool {
-		if (range.length < end.length) return false;
-		for (i < end.length) {
-			if (range[range.length - i - 1] != end[end.length - i - 1]) return false;
-		}
-		return true;
-	}
+	
 }

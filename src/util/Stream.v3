@@ -5,7 +5,7 @@ component Streams {
 		var out = Vector<byte>.new();
 		for (i < max) {
 			out.put(supplier());
-			if (out.send(TempPatches.endsWith(_, end))) break;
+			if (out.send(Ranges.endsWith(_, end))) break;
 		}
 		out.resize(out.length - end.length);
 		return out.extract();

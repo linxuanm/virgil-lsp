@@ -5,7 +5,6 @@ def X_ = void(
 	T("delete", test_delete),
 	T("put", test_put),
 	T("put", test_pop),
-	T("misc", test_misc),
 	()
 );
 
@@ -44,21 +43,62 @@ def test_empty(t: DoubleLinkedListTester) {
 }
 
 def test_at(t: DoubleLinkedListTester) {
-	
+	var xs = DoubleLinkedLists.from<int>([1, 2, 3]);
+	t.t.assert_eq(xs.at(0), 1);
+	t.t.assert_eq(xs.at(1), 2);
+	t.t.assert_eq(xs.at(2), 3);
 }
 
 def test_delete(t: DoubleLinkedListTester) {
-	
+	var xs = DoubleLinkedLists.from<int>([1, 2, 3]);
+	xs.delete(1);
+	t.testEq<int>(xs, [1, 3], StringBuilder.putd_i32);
+	xs.delete(1);
+	t.testEq<int>(xs, [1], StringBuilder.putd_i32);
+	xs.delete(0);
+	t.testEq<int>(xs, [], StringBuilder.putd_i32);
+
+	for (i < 100) xs.put(i, i);
+	for (i < 100) { t.t.assert_eq(xs.at(0), i); xs.delete(0); }
+
+	for (i < 100) xs.put(i, i);
+	for (i = 99; i >= 0; i--) { t.t.assert_eq(xs.at(i), i); xs.delete(i); }
 }
 
 def test_put(t: DoubleLinkedListTester) {
-	
+	var xs = DoubleLinkedLists.from<int>([1, 2, 3]);
+	xs.put(1, 6);
+	xs.put(3, 5);
+	xs.put(5, 4);
+	t.testEq<int>(xs, [1, 6, 2, 5, 3, 4], StringBuilder.putd_i32);
+	xs.put(0, -1);
+	xs.put(0, -2);
+	t.testEq<int>(xs, [-2, -1, 1, 6, 2, 5, 3, 4], StringBuilder.putd_i32);
+	// append to end if index out of bound
+	xs.put(50, 10);
+	xs.put(69, 2);
+	t.testEq<int>(xs, [-2, -1, 1, 6, 2, 5, 3, 4, 10, 2], StringBuilder.putd_i32);
+
+	xs = DoubleLinkedList.new();
+	for (i < 5) xs.put(0, i);
+	t.testEq<int>(xs, [4, 3, 2, 1, 0], StringBuilder.putd_i32);
+
+	xs = DoubleLinkedList.new();
+	for (i < 5) xs.put(i, i);
+	t.testEq<int>(xs, [0, 1, 2, 3, 4], StringBuilder.putd_i32);
 }
 
 def test_pop(t: DoubleLinkedListTester) {
-	
-}
+	var xs = DoubleLinkedLists.from<int>([1, 2]);
+	t.t.assert_eq(xs.popFront(), 1);
+	t.t.assert_eq(xs.popBack(), 2);
+	t.testEq<int>(xs, [], StringBuilder.putd_i32);
 
-def test_misc(t: DoubleLinkedListTester) {
-	
+	xs = DoubleLinkedLists.from<int>([-9, -8, -7, -6, -5, -4, -3]);
+	t.t.assert_eq(xs.popBack(), -3);
+	t.t.assert_eq(xs.popBack(), -4);
+	t.t.assert_eq(xs.popBack(), -5);
+	t.t.assert_eq(xs.popFront(), -9);
+	t.t.assert_eq(xs.popFront(), -8);
+	t.testEq<int>(xs, [-7, -6], StringBuilder.putd_i32);
 }

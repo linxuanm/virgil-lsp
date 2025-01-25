@@ -19,7 +19,7 @@ class DoubleLinkedList<T> {
 		for (c = begin(); c != end(); c = c.next) {
 			if (index-- == 0) return c;
 		}
-		return end();
+		return null;
 	}
 
 	// Delete {node} from list.
@@ -67,6 +67,7 @@ class DoubleLinkedList<T> {
 
 	// Shortcuts for operations with elem.
 	def at(index: int) -> T { return atN(index).elem; }
+	def delete(index: int) { deleteN(atN(index)); }
 	def put(index: int, v: T) { putN(index, DLLNode.new(v)); }
 	def putAtBegin(v: T) { putAtBeginN(DLLNode.new(v)); }
 	def putAtEnd(v: T) { putAtEndN(DLLNode.new(v)); }
