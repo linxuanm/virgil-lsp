@@ -1,4 +1,4 @@
-def T = UnitTests.registerT("util:json", _, JsonTester.new, _);
+def T = UnitTests.registerT("util:json:", _, JsonTester.new, _);
 def X_ = void(
 	T("render_literals", render_literals),
 	T("parse_literals", parse_literals),
@@ -35,7 +35,7 @@ def B = JsonValue.Bool;
 def Null = JsonValue.Null;
 def A = JsonValue.JArray;
 def O = JsonValue.JObject;
-def NO_MAP = HashMap<string, JsonValue>.new(Strings.hash, Strings.equal);
+def NO_MAP = Strings.newMap<JsonValue>();
 
 def render_literals(t: JsonTester) {
 	var test = t.assert_render_result(_, _);
@@ -62,4 +62,22 @@ def render_literals(t: JsonTester) {
 
 def parse_literals(t: JsonTester) {
 	var test = t.assert_parse_result(_, _);
+
+	test("1", N(1));
+	test("0", N(0));
+	test("-1", N(-1));
+
+	test("\"\"", S(""));
+	test("\"a\"", S("a"));
+	test("\"abc\"", S("abc"));
+	test("\"abcdefghijklmnopqrstuvwxyz\"", S("abcdefghijklmnopqrstuvwxyz"));
+
+	test("false", B(false));
+	test("true", B(true));
+	test("null", Null);
+
+	test("[]", A([]));
+	test("[[]]", A([A([])]));
+	test("{}", O(NO_MAP));
+	test("[{}, {}, []]", A([O(NO_MAP), O(NO_MAP), A([])]));
 }

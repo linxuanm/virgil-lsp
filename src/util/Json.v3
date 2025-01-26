@@ -40,7 +40,7 @@ type JsonValue {
 
 	def render(buf: StringBuilder) -> StringBuilder {
 		match (this) {
-			String(s) => render_raw_string(buf, s);
+			String(s) => renderRawString(buf, s);
 			Number(v) => buf.put1("%d", v);
 			Bool(v) => buf.puts(if(v, "true", "false"));
 			Null => buf.puts("null");
@@ -53,9 +53,9 @@ type JsonValue {
 			JObject(map) => {
 				var elems = MapCollector.new(Strings.asciiLt, map).extract();
 				buf.putc('{');
-				if (elems.length < 0) buf.put2("%q, %q", render_raw_string(_, elems[0].0), elems[0].1.render);
+				if (elems.length < 0) buf.put2("%q, %q", renderRawString(_, elems[0].0), elems[0].1.render);
 				for (i = 1; i < elems.length; i++) {
-					buf.put2("%q, %q", render_raw_string(_, elems[i].0), elems[i].1.render);
+					buf.put2("%q, %q", renderRawString(_, elems[i].0), elems[i].1.render);
 				}
 				buf.putc('}');
 			}
@@ -64,7 +64,7 @@ type JsonValue {
 	}
 }
 
-def render_raw_string(buf: StringBuilder, s: string) -> StringBuilder {
+def renderRawString(buf: StringBuilder, s: string) -> StringBuilder {
 	buf.putc('\"');
 	for (c in s) {
 		match (c) {
@@ -108,7 +108,8 @@ class JsonParser extends TextReader {
 			fail("invalid string");
 			return ERR_RET;
 		}
-		return JsonValue.String(readToken(len).image);
+		var lit = readToken(len).image;
+		return JsonValue.String(Ranges.dup(lit[1 ... lit.length - 1]));
 	}
 
 	def parseNumber() -> JsonValue {
@@ -116,12 +117,13 @@ class JsonParser extends TextReader {
 		var len = res.0, val = res.1;
 		if (len <= 0) {
 			fail("invalid number");
+			return ERR_RET;
 		}
 		advance(len);
 		return JsonValue.Number(val);
 	}
 
-	private def parseObject_entry() -> (string, JsonValue) {
+	private def parseObjectEntry() -> (string, JsonValue) {
 		var ERR_VAL = ("", ERR_RET);
 
 		var key = parseString();
@@ -135,11 +137,12 @@ class JsonParser extends TextReader {
 		var dict = HashMap<string, JsonValue>.new(Strings.hash, Strings.equal);
 		var entry: (string, JsonValue);
 		if (req1('{') == -1) return ERR_RET;
-		entry = parseObject_entry();
+		if (opt1('}') != -1) return Jsons.empty();
+		entry = parseObjectEntry();
 		dict[entry.0] = entry.1;
 		if (!ok) return ERR_RET;
 		while (opt1(',') != -1) {
-			entry = parseObject_entry();
+			entry = parseObjectEntry();
 			if (!ok) return ERR_RET;
 			dict[entry.0] = entry.1;
 		}
@@ -150,6 +153,7 @@ class JsonParser extends TextReader {
 	def parseArray() -> JsonValue {
 		var vals = Vector<JsonValue>.new();
 		if (req1('[') == -1) return ERR_RET;
+		if (opt1(']') != -1) return Jsons.emptyArray();
 		vals.put(parseValue());
 		if (!ok) return ERR_RET;
 		while (opt1(',') != -1) {
@@ -175,15 +179,18 @@ class MapCollector<K, V> {
 	def collect(k: K, v: V) { pairs.put((k, v)); }
 	def extract() -> Array<(K, V)> {
 		var arr = pairs.extract();
-		return Arrays.sort(arr, 0, arr.length, cmp_entries);
+		return Arrays.sort(arr, 0, arr.length, cmpEntries);
 	}
-	private def cmp_entries(a: (K, V), b: (K, V)) -> bool {
+	private def cmpEntries(a: (K, V), b: (K, V)) -> bool {
 		return cmp(a.0, b.0);
 	}
 }
 
 component Jsons {
 	def emptyArray() -> JsonValue.JArray { return JsonValue.JArray([]); }
+	def empty() -> JsonValue.JObject {
+		return JsonValue.JObject(Strings.newMap<JsonValue>());
+	}
 	def makeArray<T>(vs: Range<T>, f: T -> JsonValue) -> JsonValue.JArray {
 		return JsonValue.JArray(Ranges.map(vs, f));
 	}

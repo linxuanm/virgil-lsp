@@ -1,4 +1,4 @@
-def T = UnitTests.registerT("util:list", _, DoubleLinkedListTester.new, _);
+def T = UnitTests.registerT("util:list:", _, DoubleLinkedListTester.new, _);
 def X_ = void(
 	T("empty", test_empty),
 	T("at", test_at),
