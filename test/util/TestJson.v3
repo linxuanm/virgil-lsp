@@ -1,7 +1,9 @@
 def T = UnitTests.registerT("util:json:", _, JsonTester.new, _);
 def X_ = void(
 	T("render_literals", render_literals),
+	T("render_objects", render_objects),
 	T("parse_literals", parse_literals),
+	T("parse_objects", parse_objects),
 	()
 );
 
@@ -60,6 +62,22 @@ def render_literals(t: JsonTester) {
 	test(A([O(NO_MAP)]), "[{}]");
 }
 
+def render_objects(t: JsonTester) {
+	var test = t.assert_render_result(_, _);
+	var J = JsonBuilder.new;
+	var v: JsonValue;
+
+	test(J().num("abc", 0).build(), "{\"abc\": 0}");
+	test(J().num("abc", 0).num("a", 1).build(), "{\"a\": 1, \"abc\": 0}");
+	test(J().arr("v", []).build(), "{\"v\": []}");
+	test(J().arr("v", Jsons.intArray([1, 2, 3]).v).build(), "{\"v\": [1, 2, 3]}");
+
+	v = JsonBuilder.new().str("g", "x").build();
+	test(J().add("f", v).build(), "{\"f\": {\"g\": \"x\"}}");
+	test(J().add("f", v).arr("g", []).build(), "{\"f\": {\"g\": \"x\"}, \"g\": []}");
+	test(J().add("f", v).arr("g", [v]).build(), "{\"f\": {\"g\": \"x\"}, \"g\": [{\"g\": \"x\"}]}");
+}
+
 def parse_literals(t: JsonTester) {
 	var test = t.assert_parse_result(_, _);
 
@@ -80,4 +98,25 @@ def parse_literals(t: JsonTester) {
 	test("[[]]", A([A([])]));
 	test("{}", O(NO_MAP));
 	test("[{}, {}, []]", A([O(NO_MAP), O(NO_MAP), A([])]));
+}
+
+def parse_objects(t: JsonTester) {
+	var test = t.assert_parse_result(_, _);
+	var J = JsonBuilder.new;
+	var v: JsonValue;
+
+	test("{\"abc\": 0}", J().num("abc", 0).build());
+
+	test("{\"a\": 1, \"abc\": 0}", J().num("abc", 0).num("a", 1).build());
+	test("{\"v\": []}", J().arr("v", []).build());
+	test("{\"v\": [1, 2, 3]}", J().arr("v", Jsons.intArray([1, 2, 3]).v).build());
+
+	v = JsonBuilder.new().str("g", "x").build();
+	test("{\"f\": {\"g\": \"x\"}}", J().add("f", v).build());
+	test("{\"f\": {\"g\": \"x\"}, \"g\": []}", J().add("f", v).arr("g", []).build());
+	test("{\"f\": {\"g\": \"x\"}, \"g\": [{\"g\": \"x\"}]}", J().add("f", v).arr("g", [v]).build());
+
+	test("{\"f\": {\"g\": true}}", J().add("f", JsonBuilder.new().boo("g", true).build()).build());
+	test("{\"f\": {\"g\": false}}", J().add("f", JsonBuilder.new().boo("g", false).build()).build());
+	test("{\"f\": {\"g\": null}}", J().add("f", JsonBuilder.new().nil("g").build()).build());
 }

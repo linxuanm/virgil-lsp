@@ -31,7 +31,7 @@ type JsonValue {
 			var x = MapCollector.new(Strings.asciiLt, x_map).extract();
 			var y = MapCollector.new(Strings.asciiLt, y_map).extract();
 			if (x.length != y.length) return false;
-			for (i < x.length) if (x[i].0 != y[i].0 || !x[i].1.equal(y[i].1)) return false;
+			for (i < x.length) if (!Strings.equal(x[i].0, y[i].0) || !x[i].1.equal(y[i].1)) return false;
 			return true;
 		}
 
@@ -53,9 +53,9 @@ type JsonValue {
 			JObject(map) => {
 				var elems = MapCollector.new(Strings.asciiLt, map).extract();
 				buf.putc('{');
-				if (elems.length < 0) buf.put2("%q, %q", renderRawString(_, elems[0].0), elems[0].1.render);
+				if (elems.length > 0) buf.put2("%q: %q", renderRawString(_, elems[0].0), elems[0].1.render);
 				for (i = 1; i < elems.length; i++) {
-					buf.put2("%q, %q", renderRawString(_, elems[i].0), elems[i].1.render);
+					buf.put2(", %q: %q", renderRawString(_, elems[i].0), elems[i].1.render);
 				}
 				buf.putc('}');
 			}
@@ -208,6 +208,7 @@ class JsonBuilder {
 	def str(key: string, v: string) -> this { entries[key] = JsonValue.String(v); }
 	def num(key: string, v: int) -> this { entries[key] = JsonValue.Number(v); }
 	def boo(key: string, v: bool) -> this { entries[key] = JsonValue.Bool(v); }
+	def nil(key: string) -> this { entries[key] = JsonValue.Null; }
 	def arr(key: string, v: Array<JsonValue>) -> this { entries[key] = JsonValue.JArray(v); }
 	def build() -> JsonValue.JObject { return JsonValue.JObject(entries); }
 }
