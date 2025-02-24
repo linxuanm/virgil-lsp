@@ -1,5 +1,5 @@
 def main() -> int {
-  LogManager.initLogging("/home/linxuanm/workspace/virgil-lsp/new-log.txt");
+  LogManager.initLogging("./virgil-lsp-log.txt");
 
 	var server_log = Logger.new("server");
   server_log.puts("Language server started.");
