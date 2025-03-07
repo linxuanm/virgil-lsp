@@ -1,8 +1,8 @@
 type JsonValue {
+	case Null;
 	case String(v: string);
 	case Number(v: int);
 	case Bool(v: bool);
-	case Null;
 	case JArray(v: Array<JsonValue>);
 	case JObject(v: HashMap<string, JsonValue>);
 

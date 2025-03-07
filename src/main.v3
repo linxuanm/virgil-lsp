@@ -1,12 +1,12 @@
 def main() -> int {
-  LogManager.initLogging("./virgil-lsp-log.txt");
+  LogManager.initLogging("/home/linxuanm/workspace/virgil-lsp/virgil-lsp-log.txt");
 
 	var server_log = Logger.new("server");
   server_log.puts("Language server started.");
-  
-  var p = PacketParser.new(Logger.new("packet"));
-	var res = p.parse(0);
-	var out = if(p.ok, res, p.err_msg);
+
+	var p = PacketParser.new(Logger.new("packet"));
+	var handshake = p.parseJson(0);
+	if (!p.ok) { return -1; } // TODO: return invalid packet err
 
   return 0;
 }

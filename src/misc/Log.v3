@@ -1,3 +1,8 @@
+component Log {
+	def server = true;
+	def packet = true;
+}
+
 component LogManager {
 	var fd: int;
 	def initLogging(path: string) { fd = System.fileOpen(path, false); }
