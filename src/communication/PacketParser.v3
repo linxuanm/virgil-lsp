@@ -7,7 +7,7 @@ enum HeaderField(head: string) {
 	CONTENT_TYPE("Content-Type")
 }
 
-class PacketParser(log: Logger) extends Throwable<string> {
+class PacketReceiver(file_desc: int, log: Logger) extends Throwable<string> {
 	var pk_length: int;
 	var pk_type: string;
 	var fd: int;
@@ -21,8 +21,8 @@ class PacketParser(log: Logger) extends Throwable<string> {
 		ok = true;
 	}
 
-	def parseJson(file_desc: int) -> JsonValue.JObject {
-		var text = parse(file_desc);
+	def parseJson() -> JsonValue.JObject {
+		var text = parse();
 		if (text == null) return JsonValue.JObject(null);
 		var parser = JsonParser.new(text);
 		var result = parser.parseValue();
@@ -39,7 +39,7 @@ class PacketParser(log: Logger) extends Throwable<string> {
 		return json;
 	}
 
-	def parse(file_desc: int) -> string {
+	def parse() -> string {
 		if (Log.packet) log.puts("Parsing packet:");
 		reset();
 		fd = file_desc;
@@ -88,19 +88,5 @@ class PacketParser(log: Logger) extends Throwable<string> {
 		var b = System.fileRead(fd);
 		if (b < 0) return err("error reading packet bytes");
 		return byte.!(b);
-	}
-}
-
-// TODO: merge with comm channel
-class PacketReader extends Throwable<string> {
-
-	def getPayload(packet: JsonValue.JObject) -> JsonNav {
-		var r = JsonNav.new("packet", null, packet);
-		var method = r.readS("method");
-		var params = r.readO("params");
-		if (method == null) return err("packet missing required field 'method'");
-		if (params == null) return err("packet missing required field 'params'");
-		// TODO
-		return null;
 	}
 }

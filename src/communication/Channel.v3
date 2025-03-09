@@ -1,0 +1,17 @@
+class Channel(file_desc: int) extends Throwable<string> {
+	def receiver = PacketReceiver.new(file_desc, Logger.new("packet"));
+	
+	def read() -> JsonNav {
+		var packet = receiver.parseJson();
+		if (!receiver.ok) {
+			var msg = receiver.err_msg;
+			receiver.clearError();
+			return err(msg);
+		}
+		var r = JsonNav.new("packet", null, packet);
+		var method = r.readS("method");
+		var params = r.readO("params");
+		if (!r.ok) return err(Strings.format1("packet has incorrect fields: %s", r.err_msg));
+		return params;
+	}
+}

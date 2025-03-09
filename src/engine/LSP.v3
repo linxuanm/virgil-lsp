@@ -2,26 +2,21 @@
 class LSP(log: Logger) {
 
 	def config = ServerConfig.new();
-	def comm = PacketParser.new(Logger.new("packet"));
+	def comm = Channel.new(0);
 
 	def initHandshake() -> bool {
-		if (Log.server) log.puts("Starting server.");
-		var initPacket = readPacket();
-		if (initPacket.v == null) {
-			Log.err.puts("Invalid initialization packet, failed to start server.");
+		if (Log.server) log.puts("Reading initialization packet.");
+		var initializationPacket = comm.read();
+		if (initializationPacket == null) {
+			Log.err.puts("Invalid initialization packet. Failed to start server.");
 			return false;
 		}
-
-		return config.loadFromInitializationPacket(initPacket);
-	}
-
-	def readPacket() -> JsonValue.JObject  {
-		var packet = comm.parseJson(0);
-		if (!comm.ok) {
-			Log.err.format1("Invalid packet: %s", comm.err_msg);
-			return JsonValue.JObject (null);
+		if (!config.loadFromInitializationPacket(initializationPacket)) {
+			Log.err.puts("Invalid initialization payload. Failed to start server.");
+			return false;
 		}
-		return packet;
+		log.format1("Server started on directory \"%s\".", config.root_path);
+		return true;
 	}
 }
 
@@ -41,10 +36,16 @@ component LSPManager {
 
 class ServerConfig {
 
-	def ok = true;
-	def loadFromInitializationPacket(packet: JsonValue.JObject ) -> bool {
-		
+	var root_path: string;
+
+	def loadFromInitializationPacket(nav: JsonNav) -> bool {
+		root_path = nav.readS("rootPath");
+
+		if (!nav.ok) {
+			// TODO: unify packet field reading errors
+			return false;
+		}
+
 		return true;
 	}
-
 }
