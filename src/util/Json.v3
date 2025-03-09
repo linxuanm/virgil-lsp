@@ -243,12 +243,44 @@ class JsonNav(name: string, owner: JsonNav, obj: JsonValue.JObject) {
 	def assertHas(key: string) -> bool {
 		return if(obj.v.has(key), true, err(Strings.format1("expected key \"%s\"", key)));
 	}
+	def readS(key: string) -> string {
+		if (!assertHas(key)) return null;
+		var val = obj.v[key];
+		match (val) {
+			String(v) => return v;
+			_ => return errExpectedType(key, val, "string");
+		}
+	}
 	def readN(key: string) -> int {
 		if (!assertHas(key)) return 0;
 		var val = obj.v[key];
 		match (val) {
 			Number(v) => return v;
 			_ => return errExpectedType(key, val, "number");
+		}
+	}
+	def readB(key: string) -> bool {
+		if (!assertHas(key)) return false;
+		var val = obj.v[key];
+		match (val) {
+			Bool(v) => return v;
+			_ => return errExpectedType(key, val, "bool");
+		}
+	}
+	def readA(key: string) -> Array<JsonValue> {
+		if (!assertHas(key)) return null;
+		var val = obj.v[key];
+		match (val) {
+			JArray(v) => return v;
+			_ => return errExpectedType(key, val, "array");
+		}
+	}
+	def readO(key: string) -> JsonNav {
+		if (!assertHas(key)) return null;
+		var val = obj.v[key];
+		match (val) {
+			JObject(v) => return JsonNav.new(key, this, JsonValue.JObject.!(val));
+			_ => return errExpectedType(key, val, "bool");
 		}
 	}
 }
