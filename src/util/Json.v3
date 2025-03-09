@@ -278,3 +278,8 @@ class JsonNav(name: string, owner: JsonNav, obj: JsonValue.JObject) extends Thro
 		}
 	}
 }
+
+// An interface for serializable classes;
+class JsonSerializable {
+	def serialize() -> JsonValue;
+}

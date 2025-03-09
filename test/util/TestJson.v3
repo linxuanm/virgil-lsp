@@ -164,5 +164,4 @@ def reader(t: JsonTester) {
 	t.t.assert_eq(null, sub.readS("foo"));
 	t.t.assert_string("expected key \"foo\" to have type string, got bool (at \"packet.sub\")", sub.err_msg);
 	r.clearError();
-
 }
