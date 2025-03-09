@@ -6,8 +6,8 @@ enum JsonType(display: string, isType: JsonValue -> bool) {
 	STRING("string", JsonValue.String.?),
 	NUMBER("number", JsonValue.Number.?),
 	BOOL("bool", JsonValue.Bool.?),
-	JARRAY("array", JsonValue.JArray.?),
-	JOBJECT("object", JsonValue.JObject.?)
+	ARRAY("array", JsonValue.JArray.?),
+	OBJECT("object", JsonValue.JObject.?)
 }
 
 type JsonValue {
@@ -240,52 +240,56 @@ class JsonBuilder {
 class JsonNav(name: string, owner: JsonNav, obj: JsonValue.JObject) extends Throwable<string> {
 	def path: string = if(owner == null, name, concat(concat(owner.path, "."), name));
 	def suffix = Strings.format1("(at \"%s\")", path);
-	def errExpectedType<T>(key: string, value: JsonValue, expected: string) -> T {
-		var msg = Strings.format3("expected key \"%s\" to have type %s, got %q", key, expected, value.renderType);
+	def errExpectedType<T>(key: string, value: JsonValue, expected: JsonType) -> T {
+		var msg = Strings.format3(
+			"expected key \"%s\" to have type %s, got %q",
+			key, expected.display, value.renderType
+		);
 		return err(Strings.format2("%s %s", msg, suffix));
 	}
 	def assertHas(key: string) -> bool {
 		return if(obj.v.has(key), true, err(Strings.format2("expected key \"%s\" %s", key, suffix)));
 	}
-	def readS(key: string) -> string {
-		if (!assertHas(key)) return null;
+	def readType(key: string, t: JsonType) -> JsonValue {
+		if (!assertHas(key)) return JsonValue.Null;
 		var val = obj.v[key];
-		match (val) {
-			String(v) => return v;
-			_ => return errExpectedType(key, val, "string");
-		}
+		if (!t.isType(val)) return errExpectedType(key, val, t);
+		return val;
+	}
+	// {Op.None} is used to denote a {null} value when the entry is nullable.
+	// This is used instead of {JsonValue.Null} due to the need for union type
+	// for {null} and types like {int}. Therefore this also assumes that {t} is
+	// never {JsonType.NULL}.
+	def readTypeN(key: string, t: JsonType) -> Op<JsonValue> {
+		var val = obj.v[key];
+		if (!obj.v.has(key) || val == JsonValue.Null) return Op.None;
+		if (!t.isType(val)) return errExpectedType(key, val, t);
+		return Op.Some(val);
+	}
+	def readS(key: string) -> string {
+		var res = readType(key, JsonType.STRING);
+		if (!ok) return null;
+		return JsonValue.String.!(res).v;
 	}
 	def readN(key: string) -> int {
-		if (!assertHas(key)) return 0;
-		var val = obj.v[key];
-		match (val) {
-			Number(v) => return v;
-			_ => return errExpectedType(key, val, "number");
-		}
+		var res = readType(key, JsonType.NUMBER);
+		if (!ok) return 0;
+		return JsonValue.Number.!(res).v;
 	}
 	def readB(key: string) -> bool {
-		if (!assertHas(key)) return false;
-		var val = obj.v[key];
-		match (val) {
-			Bool(v) => return v;
-			_ => return errExpectedType(key, val, "bool");
-		}
+		var res = readType(key, JsonType.BOOL);
+		if (!ok) return false;
+		return JsonValue.Bool.!(res).v;
 	}
 	def readA(key: string) -> Array<JsonValue> {
-		if (!assertHas(key)) return null;
-		var val = obj.v[key];
-		match (val) {
-			JArray(v) => return v;
-			_ => return errExpectedType(key, val, "array");
-		}
+		var res = readType(key, JsonType.ARRAY);
+		if (!ok) return null;
+		return JsonValue.JArray.!(res).v;
 	}
 	def readO(key: string) -> JsonNav {
-		if (!assertHas(key)) return null;
-		var val = obj.v[key];
-		match (val) {
-			JObject(v) => return JsonNav.new(key, this, JsonValue.JObject.!(val));
-			_ => return errExpectedType(key, val, "bool");
-		}
+		var res = readType(key, JsonType.OBJECT);
+		if (!ok) return null;
+		return JsonNav.new(key, this, JsonValue.JObject.!(res));
 	}
 }
 
