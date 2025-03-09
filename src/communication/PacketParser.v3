@@ -27,14 +27,14 @@ class PacketReceiver(file_desc: int, log: Logger) extends Throwable<string> {
 		var parser = JsonParser.new(text);
 		var result = parser.parseValue();
 		if (!parser.ok) {
-			if (Log.packet) log.format1("JSON PARSE ERROR: %s", parser.error_msg);
+			if (Log.packet) log.put1("JSON PARSE ERROR: %s", parser.error_msg);
 			return err(parser.error_msg);
 		}
 		var json = JsonValue.JObject.!(result);
 		if (Log.packet) {
 			// XXX: add {size()} to {HashMap}
 			var entries = MapCollector.new(Strings.asciiLt, json.v).extract();
-			log.format1("  json_packet[entries=%d]", entries.length);
+			log.put1("  json_packet[entries=%d]", entries.length);
 		}
 		return json;
 	}
@@ -51,12 +51,12 @@ class PacketReceiver(file_desc: int, log: Logger) extends Throwable<string> {
 		for (i < pk_length) {
 			payload.put(readC());
 			if (!ok) {
-				if (Log.packet) log.format1("PACKET READ ERROR: %s", err_msg);
+				if (Log.packet) log.put1("PACKET READ ERROR: %s", err_msg);
 				return null;
 			}
 		}
 		var text = payload.extract();
-		if (Log.packet) log.format2("  content[len=%d]: %s", text.length, text);
+		if (Log.packet) log.put2("  content[len=%d]: %s", text.length, text);
 
 		return text;
 	}
@@ -65,7 +65,7 @@ class PacketReceiver(file_desc: int, log: Logger) extends Throwable<string> {
 	private def readHeader() -> bool {
 		var raw = Streams.readUntil(readC, "\r\n", PacketFormat.HEADER_MAX_LEN);
 		if (raw.length == 0) return false; // End of header section.
-		if (Log.packet) log.format2("  header[len=%d]: '%s'", raw.length, raw);
+		if (Log.packet) log.put2("  header[len=%d]: '%s'", raw.length, raw);
 		var header = Strings.split(raw, ": ", -1);
 		if (header.length != 2) return err(Strings.format1("invalid header '%s'", raw));
 		var name = header[0], content = header[1];

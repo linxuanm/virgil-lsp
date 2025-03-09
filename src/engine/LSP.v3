@@ -11,12 +11,27 @@ class LSP(log: Logger) {
 			Log.err.puts("Invalid initialization packet. Failed to start server.");
 			return false;
 		}
-		if (!config.loadFromInitializationPacket(initializationPacket)) {
-			Log.err.puts("Invalid initialization payload. Failed to start server.");
-			return false;
+		match (config.deserialize(initializationPacket)) {
+			Some(err) => {
+				Log.err.put1("Invalid initialization payload: %s", err);
+				return false;
+			}
+			_ => ;
 		}
-		log.format1("Server started on directory \"%s\".", config.root_path);
+		if (Log.server) logConfig();
+		log.put1("Server started on directory \"%s\".", config.root_path);
 		return true;
+	}
+
+	private def logConfig() {
+		log.puts("Initializing with following parameters:");
+		log.put1("  Parent process ID: %d", config.process_id);
+		if (config.client_name != null) {
+			log.puts("  Client info:");
+			log.put1("    Client name: %s", config.client_name);
+			if (config.client_version != null) log.put1("    Client version: %s", config.client_version);
+		}
+		
 	}
 }
 
@@ -34,18 +49,24 @@ component LSPManager {
 	}
 }
 
-class ServerConfig {
-
+class ServerConfig extends JsonDeserializable<string> {
+	
+	var process_id: int;
+	var client_name: string;
+	var client_version: string;
 	var root_path: string;
 
-	def loadFromInitializationPacket(nav: JsonNav) -> bool {
-		root_path = nav.readS("rootPath");
-
-		if (!nav.ok) {
-			// TODO: unify packet field reading errors
-			return false;
+	def deserialize(nav: JsonNav) -> Optional<string> {
+		process_id = nav.readN("processId");
+		var client_info = nav.readOD("clientInfo", null);
+		if (client_info != null) {
+			client_name = client_info.readS("name");
+			client_version = client_info.readSD("version", null);
 		}
 
-		return true;
+		root_path = "rua";
+
+		if (!nav.ok) return Optional.Some(nav.err_msg);
+		return Optional.None;
 	}
 }
