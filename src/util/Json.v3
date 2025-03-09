@@ -1,5 +1,15 @@
 def concat = Arrays.concat<byte>;
 
+// TODO: improve this design
+enum JsonType(isType: JsonValue -> bool) {
+	NULL(JsonValue.Null.?),
+	STRING(JsonValue.String.?),
+	NUMBER(JsonValue.Number.?),
+	BOOL(JsonValue.Bool.?),
+	JARRAY(JsonValue.JArray.?),
+	JOBJECT(JsonValue.JObject.?)
+}
+
 type JsonValue {
 	case Null;
 	case String(v: string);
