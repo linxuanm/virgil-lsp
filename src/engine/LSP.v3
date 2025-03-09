@@ -1,0 +1,51 @@
+// The main class for this language server implementation.
+class LSP(log: Logger) {
+
+	def config = ServerConfig.new();
+	def comm = PacketParser.new(Logger.new("packet"));
+
+	def initHandshake() -> bool {
+		if (Log.server) log.puts("Starting server.");
+		var initPacket = readPacket();
+		if (initPacket.v == null) {
+			Log.err.puts("Invalid initialization packet, failed to start server.");
+			return false;
+		}
+
+		return config.loadFromInitializationPacket(initPacket);
+	}
+
+	def readPacket() -> JsonValue.Object {
+		var packet = comm.parseJson(0);
+		if (!comm.ok) {
+			Log.err.format1("Invalid packet: %s", comm.error_msg);
+			return JsonValue.Object(null);
+		}
+		return packet;
+	}
+}
+
+component LSPManager {
+	var server: LSP;
+
+	def createServer() -> LSP {
+		var log = Logger.new("server");
+		if (server != null) {
+			// TODO: error
+			return null;
+		}
+		server = LSP.new(log);
+		return if(server.initHandshake(), server, null);
+	}
+}
+
+class ServerConfig {
+
+	def ok = true;
+	def loadFromInitializationPacket(packet: JsonValue.Object) -> bool {
+		
+		return true;
+	}
+
+	private def 
+}

@@ -7,8 +7,6 @@ enum HeaderField(head: string) {
 	CONTENT_TYPE("Content-Type")
 }
 
-class Packet {}
-
 class PacketParser(log: Logger) {
 
 	var pk_length: int;

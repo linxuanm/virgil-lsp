@@ -212,3 +212,11 @@ class JsonBuilder {
 	def arr(key: string, v: Array<JsonValue>) -> this { entries[key] = JsonValue.JArray(v); }
 	def build() -> JsonValue.JObject { return JsonValue.JObject(entries); }
 }
+
+// Simple wrapper for navigating/loading JSON object.
+class JsonNav(v: JsonValue.Object) {
+	var ok = true;
+	var err_msg: string;
+
+	
+}

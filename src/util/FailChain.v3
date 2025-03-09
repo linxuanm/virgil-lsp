@@ -1,0 +1,18 @@
+// Utility class for handling error propagation back to the top-level.
+// Useful for managing stuff with lots of sub-components.
+class FailChain(parent: FailChain) {
+	var ok = true;
+	var err: string;
+
+	def setErr(newErr: string) {
+		if (!ok) return;
+		ok = false;
+		err = newErr;
+		if (parent != null) parent.setErr(newErr);
+	}
+
+	def clearErr() {
+		ok = true;
+		err = null;
+	}
+}
