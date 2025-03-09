@@ -28,3 +28,21 @@ type Either<A, B> {
 		}
 	}
 }
+
+class Throwable<E> {
+	var ok = true;
+	var err_msg: E;
+	def err<T>(msg: E) -> T {
+		if (ok) {
+			ok = false;
+			err_msg = msg;
+		}
+		var ret: T;
+		return ret;
+	}
+	def clearError() {
+		ok = true;
+		var default: E;
+		err_msg = default;
+	}
+}

@@ -1,3 +1,5 @@
+def concat = Arrays.concat<byte>;
+
 type JsonValue {
 	case Null;
 	case String(v: string);
@@ -225,23 +227,15 @@ class JsonBuilder {
 }
 
 // A wrapper for navigating JSON objects.
-class JsonNav(name: string, owner: JsonNav, obj: JsonValue.JObject) {
-	var err_msg: string;
-	def path() -> string {
-		if (owner == null) return name;
-		return Arrays.concat(Arrays.concat(owner.path(), "."), name);
-	}
-	def err<T>(msg: string) -> T {
-		if (err_msg == null) err_msg = Strings.format2("%s (at %s)", msg, path());
-		var res: T;
-		return res;
-	}
+class JsonNav(name: string, owner: JsonNav, obj: JsonValue.JObject) extends Throwable<string> {
+	def path: string = if(owner == null, name, concat(concat(owner.path, "."), name));
+	def suffix = Strings.format1("(at \"%s\")", path);
 	def errExpectedType<T>(key: string, value: JsonValue, expected: string) -> T {
 		var msg = Strings.format3("expected key \"%s\" to have type %s, got %q", key, expected, value.renderType);
-		return err(msg);
+		return err(Strings.format2("%s %s", msg, suffix));
 	}
 	def assertHas(key: string) -> bool {
-		return if(obj.v.has(key), true, err(Strings.format1("expected key \"%s\"", key)));
+		return if(obj.v.has(key), true, err(Strings.format2("expected key \"%s\" %s", key, suffix)));
 	}
 	def readS(key: string) -> string {
 		if (!assertHas(key)) return null;

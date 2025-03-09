@@ -4,6 +4,7 @@ def X_ = void(
 	T("render_objects", render_objects),
 	T("parse_literals", parse_literals),
 	T("parse_objects", parse_objects),
+	T("reader", reader),
 	()
 );
 
@@ -28,6 +29,17 @@ private class JsonTester(t: Tester) {
 		if (!Strings.equal(output, expected)) {
 			t.fail(Strings.format2("expected \"%s\", got \"%s\"", expected, output));
 		}
+	}
+
+	def assert_reader_fail(nav: JsonNav, error: string) {
+		if (nav.ok) return t.fail("expected reader to fail");
+		if (!Strings.equal(nav.err_msg, error)) {
+			t.fail(Strings.format2("expected error {%d}, got {%d}", error, nav.err_msg));
+		}
+	}
+
+	def assert_reader_good(nav: JsonNav) {
+		t.assert(nav.ok, "expected reader to succeed");
 	}
 }
 
@@ -119,4 +131,38 @@ def parse_objects(t: JsonTester) {
 	test("{\"f\": {\"g\": true}}", J().add("f", JsonBuilder.new().boo("g", true).build()).build());
 	test("{\"f\": {\"g\": false}}", J().add("f", JsonBuilder.new().boo("g", false).build()).build());
 	test("{\"f\": {\"g\": null}}", J().add("f", JsonBuilder.new().nil("g").build()).build());
+}
+
+def reader(t: JsonTester) {
+	var J = JsonBuilder.new;
+	var v: JsonValue.JObject;
+
+	v = J().num("ab", 12).str("cd", "^").add("sub", J().boo("foo", true).build()).build();
+	var r = JsonNav.new("packet", null, v);
+	t.t.asserti(12, r.readN("ab"));
+
+	t.t.asserti(0, r.readN("void"));
+	t.t.assert_string("expected key \"void\" (at \"packet\")", r.err_msg);
+	r.clearError();
+
+	t.t.assert_eq(null, r.readS("rua"));
+	t.t.assert_string("expected key \"rua\" (at \"packet\")", r.err_msg);
+	r.clearError();
+
+	t.t.assert_eq(null, r.readS("ab"));
+	t.t.assert_string("expected key \"ab\" to have type string, got number (at \"packet\")", r.err_msg);
+	r.clearError();
+
+	var sub = r.readO("sub");
+	t.assert_reader_good(r);
+	t.t.assert_eq(sub.readB("foo"), true);
+
+	t.t.asserti(0, sub.readN("void"));
+	t.t.assert_string("expected key \"void\" (at \"packet.sub\")", sub.err_msg);
+	sub.clearError();
+
+	t.t.assert_eq(null, sub.readS("foo"));
+	t.t.assert_string("expected key \"foo\" to have type string, got bool (at \"packet.sub\")", sub.err_msg);
+	r.clearError();
+
 }
