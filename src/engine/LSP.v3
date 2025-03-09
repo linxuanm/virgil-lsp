@@ -63,8 +63,9 @@ class ServerConfig extends JsonDeserializable<string> {
 			client_name = client_info.readS("name");
 			client_version = client_info.readSD("version", null);
 		}
+		root_path = nav.readS("rootPath");
 
-		root_path = "rua";
+		// TODO: handle client capabilities
 
 		if (!nav.ok) return Optional.Some(nav.err_msg);
 		return Optional.None;
