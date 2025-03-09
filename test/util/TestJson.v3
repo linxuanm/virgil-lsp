@@ -5,6 +5,7 @@ def X_ = void(
 	T("parse_literals", parse_literals),
 	T("parse_objects", parse_objects),
 	T("reader", reader),
+	T("reader_default", reader_default),
 	()
 );
 
@@ -162,6 +163,36 @@ def reader(t: JsonTester) {
 	sub.clearError();
 
 	t.t.assert_eq(null, sub.readS("foo"));
+	t.t.assert_string("expected key \"foo\" to have type string, got bool (at \"packet.sub\")", sub.err_msg);
+	r.clearError();
+}
+
+def reader_default(t: JsonTester) {
+	var J = JsonBuilder.new;
+	var v: JsonValue.JObject;
+
+	v = J().num("ab", 12).str("cd", "^").add("sub", J().boo("foo", true).build()).build();
+	var r = JsonNav.new("packet", null, v);
+
+	t.t.asserti(12, r.readND("void", 12));
+	t.assert_reader_good(r);
+
+	t.t.assert_string("banana", r.readSD("rua", "banana"));
+	t.assert_reader_good(r);
+
+	t.t.assert_eq(null, r.readSD("abrua", null));
+	t.assert_reader_good(r);
+
+	var sub = r.readO("sub");
+	t.assert_reader_good(r);
+	t.t.assert_eq(sub.readB("foo"), true);
+
+	t.t.asserti(42, sub.readND("void", 42));
+	t.assert_reader_good(sub);
+	t.t.assert_eq(true, sub.readBD("yes", true));
+	t.assert_reader_good(sub);
+
+	t.t.assert_eq(null, sub.readSD("foo", "no"));
 	t.t.assert_string("expected key \"foo\" to have type string, got bool (at \"packet.sub\")", sub.err_msg);
 	r.clearError();
 }

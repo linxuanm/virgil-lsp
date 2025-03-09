@@ -256,16 +256,8 @@ class JsonNav(name: string, owner: JsonNav, obj: JsonValue.JObject) extends Thro
 		if (!t.isType(val)) return errExpectedType(key, val, t);
 		return val;
 	}
-	// {Op.None} is used to denote a {null} value when the entry is nullable.
-	// This is used instead of {JsonValue.Null} due to the need for union type
-	// for {null} and types like {int}. Therefore this also assumes that {t} is
-	// never {JsonType.NULL}.
-	def readTypeN(key: string, t: JsonType) -> Op<JsonValue> {
-		var val = obj.v[key];
-		if (!obj.v.has(key) || val == JsonValue.Null) return Op.None;
-		if (!t.isType(val)) return errExpectedType(key, val, t);
-		return Op.Some(val);
-	}
+
+	// Typed-reads.
 	def readS(key: string) -> string {
 		var res = readType(key, JsonType.STRING);
 		if (!ok) return null;
@@ -287,6 +279,38 @@ class JsonNav(name: string, owner: JsonNav, obj: JsonValue.JObject) extends Thro
 		return JsonValue.JArray.!(res).v;
 	}
 	def readO(key: string) -> JsonNav {
+		var res = readType(key, JsonType.OBJECT);
+		if (!ok) return null;
+		return JsonNav.new(key, this, JsonValue.JObject.!(res));
+	}
+
+	// Typed-reads with default value.
+	def readSD(key: string, default: string) -> string {
+		if (!obj.v.has(key)) return default;
+		var res = readType(key, JsonType.STRING);
+		if (!ok) return null;
+		return JsonValue.String.!(res).v;
+	}
+	def readND(key: string, default: int) -> int {
+		if (!obj.v.has(key)) return default;
+		var res = readType(key, JsonType.NUMBER);
+		if (!ok) return 0;
+		return JsonValue.Number.!(res).v;
+	}
+	def readBD(key: string, default: bool) -> bool {
+		if (!obj.v.has(key)) return default;
+		var res = readType(key, JsonType.BOOL);
+		if (!ok) return false;
+		return JsonValue.Bool.!(res).v;
+	}
+	def readAD(key: string, default: Array<JsonValue>) -> Array<JsonValue> {
+		if (!obj.v.has(key)) return default;
+		var res = readType(key, JsonType.ARRAY);
+		if (!ok) return null;
+		return JsonValue.JArray.!(res).v;
+	}
+	def readOD(key: string, default: JsonNav) -> JsonNav {
+		if (!obj.v.has(key)) return default;
 		var res = readType(key, JsonType.OBJECT);
 		if (!ok) return null;
 		return JsonNav.new(key, this, JsonValue.JObject.!(res));
