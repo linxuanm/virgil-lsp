@@ -100,3 +100,16 @@ class PacketParser(log: Logger) {
 		return v;
 	}
 }
+
+class PacketReader extends Throwable<string> {
+
+	def getPayload(packet: JsonValue.JObject) -> JsonNav {
+		var r = JsonNav.new("packet", null, packet);
+		var method = r.readS("method");
+		var params = r.readO("params");
+		if (method == null) return err("packet missing required field 'method'");
+		if (params == null) return err("packet missing required field 'params'");
+		// TODO
+		return null;
+	}
+}
