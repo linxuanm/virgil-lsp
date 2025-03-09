@@ -6,6 +6,17 @@ type JsonValue {
 	case JArray(v: Array<JsonValue>);
 	case JObject(v: HashMap<string, JsonValue>);
 
+	def renderType(buf: StringBuilder) -> StringBuilder {
+		match(this) {
+			Null => return buf.puts("null");
+			String => return buf.puts("string");
+			Number => return buf.puts("number");
+			Bool => return buf.puts("bool");
+			JArray => return buf.puts("array");
+			JObject => return buf.puts("object");
+		}
+	}
+
 	def equal(that: JsonValue) -> bool {
 		if (this == that) return true;
 		if (JsonValue.String.?(this) && JsonValue.String.?(that)) {
@@ -213,10 +224,31 @@ class JsonBuilder {
 	def build() -> JsonValue.JObject { return JsonValue.JObject(entries); }
 }
 
-// Simple wrapper for navigating/loading JSON object.
-class JsonNav(v: JsonValue.Object) {
-	var ok = true;
+// A wrapper for navigating JSON objects.
+class JsonNav(name: string, owner: JsonNav, obj: JsonValue.JObject) {
 	var err_msg: string;
-
-	
+	def path() -> string {
+		if (owner == null) return name;
+		return Arrays.concat(Arrays.concat(owner.path(), "."), name);
+	}
+	def err<T>(msg: string) -> T {
+		if (err_msg == null) err_msg = Strings.format2("%s (at %s)", msg, path());
+		var res: T;
+		return res;
+	}
+	def errExpectedType<T>(key: string, value: JsonValue, expected: string) -> T {
+		var msg = Strings.format3("expected key \"%s\" to have type %s, got %q", key, expected, value.renderType);
+		return err(msg);
+	}
+	def assertHas(key: string) -> bool {
+		return if(obj.v.has(key), true, err(Strings.format1("expected key \"%s\"", key)));
+	}
+	def readN(key: string) -> int {
+		if (!assertHas(key)) return 0;
+		var val = obj.v[key];
+		match (val) {
+			Number(v) => return v;
+			_ => return errExpectedType(key, val, "number");
+		}
+	}
 }

@@ -15,11 +15,11 @@ class LSP(log: Logger) {
 		return config.loadFromInitializationPacket(initPacket);
 	}
 
-	def readPacket() -> JsonValue.Object {
+	def readPacket() -> JsonValue.JObject  {
 		var packet = comm.parseJson(0);
 		if (!comm.ok) {
-			Log.err.format1("Invalid packet: %s", comm.error_msg);
-			return JsonValue.Object(null);
+			Log.err.format1("Invalid packet: %s", comm.err_msg);
+			return JsonValue.JObject (null);
 		}
 		return packet;
 	}
@@ -42,10 +42,9 @@ component LSPManager {
 class ServerConfig {
 
 	def ok = true;
-	def loadFromInitializationPacket(packet: JsonValue.Object) -> bool {
+	def loadFromInitializationPacket(packet: JsonValue.JObject ) -> bool {
 		
 		return true;
 	}
 
-	private def 
 }

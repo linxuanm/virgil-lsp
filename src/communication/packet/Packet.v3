@@ -20,11 +20,10 @@ def PACKET_CONSTRUCTORS = [
 	("initialize", InitializePacket.new)
 ];
 
-class PacketReader {
-	var ok = true;
+class PacketReader {\
 	var err_msg: string;
 
-	def fromPayload (packet: JsonValue.Object) -> Packet {
+	def fromPayload (packet: JsonValue.JObject ) -> Packet {
 		var method = packet.v["method"];
 		var params = packet.v["params"];
 		if (method == null) return Either.Left("packet missing required field 'method'");
