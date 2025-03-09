@@ -1,11 +1,11 @@
-type Op<T> {
+type Optional<T> {
 	case None;
 	case Some(value: T);
 
-	def map<O>(f: T -> O) -> Op<O> {
+	def map<O>(f: T -> O) -> Optional<O> {
 		match (this) {
-			None => return Op.None;
-			Some(v) => return Op.Some(f(v));
+			None => return Optional.None;
+			Some(v) => return Optional.Some(f(v));
 		}
 	}
 }
