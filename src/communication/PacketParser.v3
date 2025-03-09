@@ -7,13 +7,10 @@ enum HeaderField(head: string) {
 	CONTENT_TYPE("Content-Type")
 }
 
-class PacketParser(log: Logger) {
-
+class PacketParser(log: Logger) extends Throwable<string> {
 	var pk_length: int;
 	var pk_type: string;
 	var fd: int;
-	var ok: bool;
-	var err_msg: string;
 
 	new() { reset(); }
 
@@ -92,15 +89,9 @@ class PacketParser(log: Logger) {
 		if (b < 0) return err("error reading packet bytes");
 		return byte.!(b);
 	}
-
-	private def err<T>(msg: string) -> T {
-		ok = false;
-		err_msg = msg;
-		var v: T;
-		return v;
-	}
 }
 
+// TODO: merge with comm channel
 class PacketReader extends Throwable<string> {
 
 	def getPayload(packet: JsonValue.JObject) -> JsonNav {
