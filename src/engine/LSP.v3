@@ -1,8 +1,14 @@
 // The main class for this language server implementation.
-class LSP(log: Logger) {
+// TODO: use a stateful implementation to handle requests
+class LSP(log: Logger) extends Throwable<string> {
 
 	def config = ServerConfig.new();
 	def comm = Channel.new(0);
+	def initialized = false;
+
+	def initialize() {
+
+	}
 
 	def initHandshake() -> bool {
 		if (Log.server) log.puts("Reading initialization packet.");
@@ -23,6 +29,10 @@ class LSP(log: Logger) {
 		return true;
 	}
 
+	def loop() {
+
+	}
+
 	private def logConfig() {
 		log.puts("Initializing with following parameters:");
 		log.put1("  Parent process ID: %d", config.process_id);
@@ -31,7 +41,6 @@ class LSP(log: Logger) {
 			log.put1("    Client name: %s", config.client_name);
 			if (config.client_version != null) log.put1("    Client version: %s", config.client_version);
 		}
-		
 	}
 }
 

@@ -1,5 +1,6 @@
 class Channel(file_desc: int) extends Throwable<string> {
-	def receiver = PacketReceiver.new(file_desc, Logger.new("packet"));
+	def log = Logger.new("packet");
+	def receiver = PacketReceiver.new(file_desc, log);
 	
 	def read() -> JsonNav {
 		var packet = receiver.parseJson();

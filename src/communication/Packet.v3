@@ -1,0 +1,31 @@
+class InitializationPacket extends JsonDeserializable<string> {
+
+	var process_id: int;
+	var client_name: string;
+	var client_version: string;
+	var root_path: string;
+
+	def deserialize(val: JsonNav) -> Optional<E> {
+		process_id = nav.readN("processId");
+		var client_info = nav.readOD("clientInfo", null);
+		if (client_info != null) {
+			client_name = client_info.readS("name");
+			client_version = client_info.readSD("version", null);
+		}
+		root_path = nav.readS("rootPath");
+
+		// TODO: handle client capabilities
+
+		if (!nav.ok) return Optional.Some(nav.err_msg);
+		return Optional.None;
+	}
+
+	def logContent(log: Logger) {
+		log.put1("  Parent process ID: %d", config.process_id);
+		if (config.client_name != null) {
+			log.puts("  Client info:");
+			log.put1("    Client name: %s", config.client_name);
+			if (config.client_version != null) log.put1("    Client version: %s", config.client_version);
+		}
+	}
+}
