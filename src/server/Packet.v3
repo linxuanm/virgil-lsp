@@ -13,8 +13,7 @@ class UnsupportedMethodPacket extends IncomingData {
 
 class ClientInfo extends IncomingData {
 	var name: string;
-	var version: string;
-
+	var version: string; // nullable
 	def deserialize(nav: JsonNav) -> bool {
 		name = nav.readS("name");
 		version = nav.readSD("version", null);
@@ -27,9 +26,8 @@ class ClientInfo extends IncomingData {
 }
 class InitializePacket extends IncomingData {
 	var process_id: int;
-	var client_info: ClientInfo;
+	var client_info: ClientInfo; // nullable
 	var root_path: string;
-
 	def deserialize(nav: JsonNav) -> bool {
 		process_id = nav.readN("processId");
 		var client_data = nav.readOD("clientInfo", null);
@@ -49,4 +47,23 @@ class InitializePacket extends IncomingData {
 			client_info.logContent(log, depth + 1);
 		}
 	}
+}
+
+class ServerCapabilities extends OutgoingData {
+
+}
+class ServerInfo extends OutgoingData {
+	var name: string;
+	var version: string; // nullable
+	def serialize() -> JsonValue {
+		var b = JsonBuilder.new().str("name", name);
+		if (version != null) b.str("version", version);
+		return b.build();
+	}
+	def logContent(log: Logger, depth: int) {
+		
+	}
+}
+class InitializeResult extends OutgoingData {
+
 }
