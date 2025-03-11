@@ -1,12 +1,13 @@
 // TODO: maybe log levels?
 
 component Log {
-	// unified error reporter
+	// Logging for error messages.
 	def err = Logger.new("ERROR");
 
 	// options for logging
 	def server = true;
 	def packet = true;
+	def event = true;
 }
 
 component LogManager {

@@ -45,4 +45,9 @@ class Throwable<E> {
 		var default: E;
 		err_msg = default;
 	}
+	def getAndClearError() -> E {
+		var stored = err_msg;
+		clearError();
+		return stored;
+	}
 }

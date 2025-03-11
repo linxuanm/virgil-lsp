@@ -1,45 +1,44 @@
-// The main class for this language server implementation.
-// TODO: use a stateful implementation to handle requests
-class LSP(log: Logger) extends Throwable<string> {
+enum ServerState {
+	UNINITIALIZED,
+	RUNNING,
+	STOPPED
+}
 
+// The main class for this language server implementation.
+class LSP {
+
+	def log = Logger.new("server");
 	def config = ServerConfig.new();
 	def comm = Channel.new(0);
-	def initialized = false;
+	def subscriber = EventBusSubscriber<JsonNav>.new();
 
-	def initialize() {
+	var state = ServerState.UNINITIALIZED;
 
+	def register_packet_subscriber = subscriber.register;
+
+	new() {
+		register_packet_subscriber("initialize", initializeFromPacket);
 	}
 
-	def initHandshake() -> bool {
-		if (Log.server) log.puts("Reading initialization packet.");
-		var initializationPacket = comm.read();
-		if (initializationPacket == null) {
-			Log.err.puts("Invalid initialization packet. Failed to start server.");
-			return false;
+	// Returns whether the initialization was successful.
+	def initializeFromPacket(nav: JsonNav) {
+		config.root_path = nav.readS("rootPath");
+
+		if (!nav.ok) {
+			Log.err.puts("Server initialization failed.");
+			Log.err.put1("Invalid packet: %s", nav.err_msg);
+			return;
 		}
-		match (config.deserialize(initializationPacket)) {
-			Some(err) => {
-				Log.err.put1("Invalid initialization payload: %s", err);
-				return false;
-			}
-			_ => ;
-		}
-		if (Log.server) logConfig();
-		log.put1("Server started on directory \"%s\".", config.root_path);
-		return true;
+		state = ServerState.RUNNING;
+		if (Log.server) log.puts("Server initialized.");
 	}
 
 	def loop() {
-
-	}
-
-	private def logConfig() {
-		log.puts("Initializing with following parameters:");
-		log.put1("  Parent process ID: %d", config.process_id);
-		if (config.client_name != null) {
-			log.puts("  Client info:");
-			log.put1("    Client name: %s", config.client_name);
-			if (config.client_version != null) log.put1("    Client version: %s", config.client_version);
+		var packet = comm.read();
+		match (packet) {
+			InvalidPacket(err) => ;
+			InvalidJsonFormat(err) => ;
+			Success(method, data) => subscriber.fire(method, data);
 		}
 	}
 }
@@ -48,35 +47,15 @@ component LSPManager {
 	var server: LSP;
 
 	def createServer() -> LSP {
-		var log = Logger.new("server");
 		if (server != null) {
-			// TODO: error
+			Log.err.puts("Unable to start server as an instance is already running.");
 			return null;
 		}
-		server = LSP.new(log);
-		return if(server.initHandshake(), server, null);
+		server = LSP.new();
+		return server;
 	}
 }
 
-class ServerConfig extends JsonDeserializable<string> {
-	
-	var process_id: int;
-	var client_name: string;
-	var client_version: string;
+class ServerConfig {
 	var root_path: string;
-
-	def deserialize(nav: JsonNav) -> Optional<string> {
-		process_id = nav.readN("processId");
-		var client_info = nav.readOD("clientInfo", null);
-		if (client_info != null) {
-			client_name = client_info.readS("name");
-			client_version = client_info.readSD("version", null);
-		}
-		root_path = nav.readS("rootPath");
-
-		// TODO: handle client capabilities
-
-		if (!nav.ok) return Optional.Some(nav.err_msg);
-		return Optional.None;
-	}
 }

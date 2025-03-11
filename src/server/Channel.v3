@@ -1,18 +1,24 @@
-class Channel(file_desc: int) extends Throwable<string> {
+type ReadPacketResult {
+	case InvalidPacket(err: string);
+	case InvalidJsonFormat(err: string);
+	case Success(method: string, data: JsonNav);
+}
+
+class Channel(file_desc: int) {
 	def log = Logger.new("packet");
 	def receiver = PacketReceiver.new(file_desc, log);
 	
-	def read() -> JsonNav {
+	def read() -> ReadPacketResult {
 		var packet = receiver.parseJson();
-		if (!receiver.ok) {
-			var msg = receiver.err_msg;
-			receiver.clearError();
-			return err(msg);
-		}
+		if (!receiver.ok) return ReadPacketResult.InvalidPacket(receiver.getAndClearError());
 		var r = JsonNav.new("packet", null, packet);
 		var method = r.readS("method");
 		var params = r.readO("params");
-		if (!r.ok) return err(Strings.format1("packet has incorrect fields: %s", r.err_msg));
-		return params;
+		if (!r.ok) return ReadPacketResult.InvalidJsonFormat(r.err_msg);
+		return ReadPacketResult.Success(method, params);
+	}
+
+	def send(payload: JsonValue) {
+		
 	}
 }

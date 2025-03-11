@@ -1,7 +1,7 @@
 def main() -> int {
   LogManager.initLogging("/home/linxuanm/workspace/virgil-lsp/virgil-lsp-log.txt");
-	var server = LSP.new(Logger.new("server"));
-	if (!server.initHandshake()) return -1;
+	var server = LSP.new();
+	server.loop();
 
   return 0;
 }
