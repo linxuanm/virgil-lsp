@@ -1,13 +1,23 @@
-class InitializationPacket extends JsonDeserializable<string> {
+class IncomingPacket extends JsonDeserializable { def logContent(log: Logger); }
+class OutgoingPacket extends JsonSerializable { def logContent(log: Logger); }
 
+enum IncomingPacketKind(method: string, factory: () -> IncomingPacket) {
+	INITIALIZE_PACKET("initialize", InitializePacket.new)
+}
+
+// If you want to subscribe to an unsupported/WIP method, use this.
+class UnsupportedMethodPacket extends IncomingPacket {
+	var data: JsonNav;
+	def deserialize(nav: JsonNav) -> bool { data = nav; return true; }
+}
+
+class InitializePacket extends IncomingPacket {
 	var process_id: int;
 	var client_name: string;
 	var client_version: string;
 	var root_path: string;
 
-	// TODO: do not return err msg; simply return indication of failure
-	// maybe log the err msg instead
-	def deserialize(nav: JsonNav) -> Optional<string> {
+	def deserialize(nav: JsonNav) -> bool {
 		process_id = nav.readN("processId");
 		var client_info = nav.readOD("clientInfo", null);
 		if (client_info != null) {
@@ -17,9 +27,7 @@ class InitializationPacket extends JsonDeserializable<string> {
 		root_path = nav.readS("rootPath");
 
 		// TODO: handle client capabilities
-
-		if (!nav.ok) return Optional.Some(nav.err_msg);
-		return Optional.None;
+		return nav.ok;
 	}
 
 	def logContent(log: Logger) {

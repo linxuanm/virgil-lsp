@@ -320,11 +320,9 @@ class JsonNav(name: string, owner: JsonNav, obj: JsonValue.JObject) extends Thro
 // An interface for serializable objects.
 class JsonSerializable {
 	def serialize() -> JsonValue;
-	def logContent(log: Logger); // XXX: refactor this elsewhere
 }
 // An interface for objects that can be loaded from a JSON.
-// {E} denotes the type of error thrown when provided with invalid JSON data.
-class JsonDeserializable<E> {
-	def deserialize(val: JsonNav) -> Optional<E>;
-	def logContent(log: Logger); // XXX: refactor this elsewhere
+class JsonDeserializable {
+	// Returns whether deserialization succeeded.
+	def deserialize(val: JsonNav) -> bool;
 }

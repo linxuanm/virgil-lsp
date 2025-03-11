@@ -1,24 +1,40 @@
 type ReadPacketResult {
 	case InvalidPacket(err: string);
 	case InvalidJsonFormat(err: string);
-	case Success(method: string, data: JsonNav);
+	case Success(method: string, packet: IncomingPacket);
 }
 
 class Channel(file_desc: int) {
 	def log = Logger.new("packet");
 	def receiver = PacketReceiver.new(file_desc, log);
+
+	var sent_id = 0;
 	
 	def read() -> ReadPacketResult {
-		var packet = receiver.parseJson();
+		var data = receiver.parseJson();
 		if (!receiver.ok) return ReadPacketResult.InvalidPacket(receiver.getAndClearError());
-		var r = JsonNav.new("packet", null, packet);
+		var r = JsonNav.new("packet", null, data);
 		var method = r.readS("method");
 		var params = r.readO("params");
 		if (!r.ok) return ReadPacketResult.InvalidJsonFormat(r.err_msg);
-		return ReadPacketResult.Success(method, params);
+		for (k in IncomingPacketKind) {
+			if (Strings.equal(method, k.method)) {
+				var packet = k.factory();
+				if (!packet.deserialize(params)) {
+					var msg = Strings.format1("Failed to deserialize packet of method \"%s\"", method);
+					return ReadPacketResult.InvalidJsonFormat(msg);
+				}
+				if (Log.packet) log.put1("Deserialized packet of method \"%s\".", method);
+				return ReadPacketResult.Success(method, packet);
+			}
+		}
+		if (Log.packet) log.put1("Unsupported method \"%s\", falling through.", method);
+		var packet = UnsupportedMethodPacket.new();
+		packet.deserialize(params);
+		return ReadPacketResult.Success(method, packet);
 	}
 
-	def send(payload: JsonValue) {
+	def send(payload: ResponseMessage) {
 		
 	}
 }

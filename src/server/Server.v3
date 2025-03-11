@@ -10,7 +10,7 @@ class LSP {
 	def log = Logger.new("server");
 	def config = ServerConfig.new();
 	def comm = Channel.new(0);
-	def subscriber = EventBusSubscriber<JsonNav>.new();
+	def subscriber = EventBusSubscriber<IncomingPacket>.new();
 
 	var state = ServerState.UNINITIALIZED;
 
@@ -21,16 +21,11 @@ class LSP {
 	}
 
 	// Returns whether the initialization was successful.
-	def initializeFromPacket(nav: JsonNav) {
-		config.root_path = nav.readS("rootPath");
-
-		if (!nav.ok) {
-			Log.err.puts("Server initialization failed.");
-			Log.err.put1("Invalid packet: %s", nav.err_msg);
-			return;
-		}
+	def initializeFromPacket(packet: IncomingPacket) {
+		var p = InitializePacket.!(packet);
+		config.root_path = p.root_path;
 		state = ServerState.RUNNING;
-		if (Log.server) log.puts("Server initialized.");
+		if (Log.server) log.put1("Server started on workspace %s.", config.root_path);
 	}
 
 	def loop() {

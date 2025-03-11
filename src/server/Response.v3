@@ -6,17 +6,7 @@ class ResponseError(code: int, message: string, data: JsonSerializable) extends 
 	}
 }
 
-type ResponseContent {
+type ResponseMessage {
 	case Data(v: JsonSerializable);
 	case Error(e: ResponseError);
-}
-class ResponseMessage(id: int, content: ResponseContent) extends JsonSerializable {
-	def serialize() -> JsonValue {
-		var b = JsonBuilder.new().num("id", id);
-		match (content) {
-			Data(v) => b.add("result", v.serialize());
-			Error(e) => b.add("error", e.serialize());
-		}
-		return b.build();
-	}
 }
