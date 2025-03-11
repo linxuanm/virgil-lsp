@@ -5,7 +5,9 @@ class InitializationPacket extends JsonDeserializable<string> {
 	var client_version: string;
 	var root_path: string;
 
-	def deserialize(val: JsonNav) -> Optional<E> {
+	// TODO: do not return err msg; simply return indication of failure
+	// maybe log the err msg instead
+	def deserialize(nav: JsonNav) -> Optional<string> {
 		process_id = nav.readN("processId");
 		var client_info = nav.readOD("clientInfo", null);
 		if (client_info != null) {
@@ -21,11 +23,11 @@ class InitializationPacket extends JsonDeserializable<string> {
 	}
 
 	def logContent(log: Logger) {
-		log.put1("  Parent process ID: %d", config.process_id);
-		if (config.client_name != null) {
+		log.put1("  Parent process ID: %d", process_id);
+		if (client_name != null) {
 			log.puts("  Client info:");
-			log.put1("    Client name: %s", config.client_name);
-			if (config.client_version != null) log.put1("    Client version: %s", config.client_version);
+			log.put1("    Client name: %s", client_name);
+			if (client_version != null) log.put1("    Client version: %s", client_version);
 		}
 	}
 }

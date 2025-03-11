@@ -37,5 +37,5 @@ PATH_LSP="$ROOT/src"
 PATH_TEST="$ROOT/test"
 
 # TODO: check for nested path wildcard support in Virgil
-FILES_LSP="$V3_UTIL $PATH_LSP/*/*.v3 $PATH_LSP/*/*/*.v3"
+FILES_LSP="$V3_UTIL $PATH_LSP/**/*.v3"
 FILES_TEST="$V3_TEST $PATH_TEST/**/*.v3"

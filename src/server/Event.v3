@@ -1,0 +1,5 @@
+class EventBusSubscriber<I, O> {
+	def log = Logger.new("event");
+	def handler_registry = Strings.newMap<Vector<I -> O>>();
+	def notif_registry = Strings.newMap<I -> ()>();
+}
