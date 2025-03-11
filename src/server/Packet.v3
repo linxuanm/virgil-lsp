@@ -1,5 +1,5 @@
-class IncomingData extends JsonDeserializable { def logContent(log: Logger, indent: int); }
-class OutgoingData extends JsonSerializable { def logContent(log: Logger, indent: int); }
+class IncomingData extends JsonDeserializable { def logContent(log: Logger); }
+class OutgoingData extends JsonSerializable { def logContent(log: Logger); }
 
 enum IncomingDataKind(method: string, factory: () -> IncomingData) {
 	INITIALIZE_PACKET("initialize", InitializePacket.new)
@@ -19,9 +19,9 @@ class ClientInfo extends IncomingData {
 		version = nav.readSD("version", null);
 		return nav.ok;
 	}
-	def logContent(log: Logger, depth: int) {
-		log.put2("%qName: %s", Log.indent(depth, _), name);
-		if (version != null) log.put2("%qVersion: %s", Log.indent(depth, _), version);
+	def logContent(log: Logger) {
+		log.put1("Name: %s", name);
+		if (version != null) log.put1("Version: %s", version);
 	}
 }
 class InitializePacket extends IncomingData {
@@ -40,11 +40,13 @@ class InitializePacket extends IncomingData {
 		// TODO: handle client capabilities
 		return nav.ok;
 	}
-	def logContent(log: Logger, depth: int) {
-		log.put2("%qParent process ID: %d", Log.indent(depth, _), process_id);
+	def logContent(log: Logger) {
+		log.put1("Parent process ID: %d", process_id);
 		if (client_info != null) {
-			log.put1("%qClient info:", Log.indent(depth, _));
-			client_info.logContent(log, depth + 1);
+			log.puts("Client info:");
+			log.indent();
+			client_info.logContent(log);
+			log.dedent();
 		}
 	}
 }
@@ -60,8 +62,8 @@ class ServerInfo extends OutgoingData {
 		if (version != null) b.str("version", version);
 		return b.build();
 	}
-	def logContent(log: Logger, depth: int) {
-		
+	def logContent(log: Logger) {
+
 	}
 }
 class InitializeResult extends OutgoingData {

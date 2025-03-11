@@ -8,11 +8,6 @@ component Log {
 	def server = true;
 	def packet = true;
 	def event = true;
-
-	def indent(depth: int, b: StringBuilder) -> StringBuilder {
-		for (i < depth) b.puts("  ");
-		return b;
-	}
 }
 
 component LogManager {
@@ -22,9 +17,20 @@ component LogManager {
 }
 
 class Logger(name: string) {
-	private def write(s: string) { System.write(LogManager.fd, Strings.format2("[%s] %s\n", name, s)); }
+	var indent_size = 0;
+	private def write(s: string) {
+		var msg = Strings.format3("[%s] %q%s\n", name, indentLine(indent_size, _), s);
+		System.write(LogManager.fd, msg);
+	}
+	def indent() { indent_size++; }
+	def dedent() { indent_size = Ints.max(0, indent_size - 1); }
 	def puts(s: string) { write(s); }
 	def put1<A>(f: string, a: A) { write(Strings.format1(f, a)); }
 	def put2<A, B>(f: string, a: A, b: B) { write(Strings.format2(f, a, b)); }
 	def put3<A, B, C>(f: string, a: A, b: B, c: C) { write(Strings.format3(f, a, b, c)); }
+}
+
+def indentLine(depth: int, b: StringBuilder) -> StringBuilder {
+	for (i < depth) b.puts("  ");
+	return b;
 }
