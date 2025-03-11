@@ -1,7 +1,7 @@
 type ReadPacketResult {
 	case InvalidPacket(err: string);
 	case InvalidJsonFormat(err: string);
-	case Success(method: string, packet: IncomingPacket);
+	case Success(method: string, packet: IncomingData);
 }
 
 class Channel(file_desc: int) {
@@ -17,14 +17,17 @@ class Channel(file_desc: int) {
 		var method = r.readS("method");
 		var params = r.readO("params");
 		if (!r.ok) return ReadPacketResult.InvalidJsonFormat(r.err_msg);
-		for (k in IncomingPacketKind) {
+		for (k in IncomingDataKind) {
 			if (Strings.equal(method, k.method)) {
 				var packet = k.factory();
 				if (!packet.deserialize(params)) {
 					var msg = Strings.format1("Failed to deserialize packet of method \"%s\"", method);
 					return ReadPacketResult.InvalidJsonFormat(msg);
 				}
-				if (Log.packet) log.put1("Deserialized packet of method \"%s\".", method);
+				if (Log.packet) {
+					log.put1("Deserialized packet of method \"%s\":", method);
+					packet.logContent(log, 1);
+				}
 				return ReadPacketResult.Success(method, packet);
 			}
 		}

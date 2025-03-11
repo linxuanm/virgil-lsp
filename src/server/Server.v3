@@ -10,7 +10,7 @@ class LSP {
 	def log = Logger.new("server");
 	def config = ServerConfig.new();
 	def comm = Channel.new(0);
-	def subscriber = EventBusSubscriber<IncomingPacket>.new();
+	def subscriber = EventBusSubscriber<IncomingData>.new();
 
 	var state = ServerState.UNINITIALIZED;
 
@@ -21,7 +21,7 @@ class LSP {
 	}
 
 	// Returns whether the initialization was successful.
-	def initializeFromPacket(packet: IncomingPacket) {
+	def initializeFromPacket(packet: IncomingData) {
 		var p = InitializePacket.!(packet);
 		config.root_path = p.root_path;
 		state = ServerState.RUNNING;

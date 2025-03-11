@@ -8,6 +8,11 @@ component Log {
 	def server = true;
 	def packet = true;
 	def event = true;
+
+	def indent(depth: int, b: StringBuilder) -> StringBuilder {
+		for (i < depth) b.puts("  ");
+		return b;
+	}
 }
 
 component LogManager {

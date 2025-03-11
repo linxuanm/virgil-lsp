@@ -1,41 +1,52 @@
-class IncomingPacket extends JsonDeserializable { def logContent(log: Logger); }
-class OutgoingPacket extends JsonSerializable { def logContent(log: Logger); }
+class IncomingData extends JsonDeserializable { def logContent(log: Logger, indent: int); }
+class OutgoingData extends JsonSerializable { def logContent(log: Logger, indent: int); }
 
-enum IncomingPacketKind(method: string, factory: () -> IncomingPacket) {
+enum IncomingDataKind(method: string, factory: () -> IncomingData) {
 	INITIALIZE_PACKET("initialize", InitializePacket.new)
 }
 
 // If you want to subscribe to an unsupported/WIP method, use this.
-class UnsupportedMethodPacket extends IncomingPacket {
+class UnsupportedMethodPacket extends IncomingData {
 	var data: JsonNav;
 	def deserialize(nav: JsonNav) -> bool { data = nav; return true; }
 }
 
-class InitializePacket extends IncomingPacket {
+class ClientInfo extends IncomingData {
+	var name: string;
+	var version: string;
+
+	def deserialize(nav: JsonNav) -> bool {
+		name = nav.readS("name");
+		version = nav.readSD("version", null);
+		return nav.ok;
+	}
+	def logContent(log: Logger, depth: int) {
+		log.put2("%qName: %s", Log.indent(depth, _), name);
+		if (version != null) log.put2("%qVersion: %s", Log.indent(depth, _), version);
+	}
+}
+class InitializePacket extends IncomingData {
 	var process_id: int;
-	var client_name: string;
-	var client_version: string;
+	var client_info: ClientInfo;
 	var root_path: string;
 
 	def deserialize(nav: JsonNav) -> bool {
 		process_id = nav.readN("processId");
-		var client_info = nav.readOD("clientInfo", null);
-		if (client_info != null) {
-			client_name = client_info.readS("name");
-			client_version = client_info.readSD("version", null);
+		var client_data = nav.readOD("clientInfo", null);
+		if (client_data != null) {
+			client_info = ClientInfo.new();
+			if (!client_info.deserialize(client_data)) return false;
 		}
 		root_path = nav.readS("rootPath");
 
 		// TODO: handle client capabilities
 		return nav.ok;
 	}
-
-	def logContent(log: Logger) {
-		log.put1("  Parent process ID: %d", process_id);
-		if (client_name != null) {
-			log.puts("  Client info:");
-			log.put1("    Client name: %s", client_name);
-			if (client_version != null) log.put1("    Client version: %s", client_version);
+	def logContent(log: Logger, depth: int) {
+		log.put2("%qParent process ID: %d", Log.indent(depth, _), process_id);
+		if (client_info != null) {
+			log.put1("%qClient info:", Log.indent(depth, _));
+			client_info.logContent(log, depth + 1);
 		}
 	}
 }
