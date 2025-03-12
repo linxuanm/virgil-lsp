@@ -1,11 +1,12 @@
 enum ServerState {
 	UNINITIALIZED,
 	RUNNING,
-	STOPPED
+	SHUTDOWN,
+	EXIT
 }
 
-// The main class for this language server implementation.
-class LSP {
+// The main class for handling LSP lifecycle.
+class Server {
 
 	def log = Logger.new("server");
 	def config = ServerConfig.new();
@@ -13,15 +14,18 @@ class LSP {
 	def subscriber = EventBusSubscriber<IncomingData>.new();
 
 	var state = ServerState.UNINITIALIZED;
+	var exit_code = 0;
 
 	def register_packet_subscriber = subscriber.register;
 
 	new() {
-		register_packet_subscriber("initialize", initializeFromPacket);
+		subscriber.filter = filterEvent;
+		register_packet_subscriber("initialize", initialize);
+		register_packet_subscriber("shutdown", shutdown);
+		register_packet_subscriber("exit", exit);
 	}
 
-	// Returns whether the initialization was successful.
-	def initializeFromPacket(packet: IncomingData) {
+	def initialize(packet: IncomingData) {
 		var p = InitializePacket.!(packet);
 		config.root_path = p.root_path;
 		state = ServerState.RUNNING;
@@ -32,25 +36,60 @@ class LSP {
 		comm.send(ResponseMessage.Data(InitializeResult.new(capabilities, server_info)));
 	}
 
-	def loop() {
-		var packet = comm.read();
-		match (packet) {
-			InvalidPacket(err) => ;
-			InvalidJsonFormat(err) => ;
-			Success(method, data) => subscriber.fire(method, data);
+	def shutdown(packet: IncomingData) {
+		if (Log.server) log.puts("Server received SHUTDOWN.");
+		state = ServerState.SHUTDOWN;
+		comm.send(ResponseMessage.Data(ShutdownResult.new()));
+	}
+
+	def exit(packet: IncomingData) {
+		if (Log.server) log.puts("Server received EXIT.");
+		if (state != ServerState.SHUTDOWN) {
+			Log.err.puts("Server did not receive SHUTDOWN before EXIT.");
+			exit_code = 1;
 		}
+		state = ServerState.EXIT;
+	}
+
+	def loop() -> int {
+		while (state != ServerState.EXIT) {
+			var packet = comm.read();
+			match (packet) {
+				RPCError(e) => comm.sendSimpleError(e);
+				Success(method, data) => subscriber.fire(method, data);
+			}
+		}
+		log.puts("Exiting server main loop.");
+		return exit_code;
+	}
+
+	// Used to disable the event bus based on the current {Server.state}.
+	// e.g., if any packet other than "initialize" is received when the server is
+	// uninitialized, cancel the event and send a {SERVER_NOT_INITIALIZED} error.
+	private def filterEvent(method: string, packet: IncomingData) -> bool {
+		if (state == ServerState.UNINITIALIZED && !Strings.equal(method, "initialize")) {
+			comm.sendSimpleError(ErrorCodes.SERVER_NOT_INITIALIZED);
+			return false;
+		}
+
+		if (state == ServerState.SHUTDOWN && !Strings.equal(method, "exit")) {
+			comm.sendSimpleError(ErrorCodes.INVALID_REQUEST);
+			return false;
+		}
+
+		return true;
 	}
 }
 
 component LSPManager {
-	var server: LSP;
+	var server: Server;
 
-	def createServer() -> LSP {
+	def createServer() -> Server {
 		if (server != null) {
 			Log.err.puts("Unable to start server as an instance is already running.");
 			return null;
 		}
-		server = LSP.new();
+		server = Server.new();
 		return server;
 	}
 }

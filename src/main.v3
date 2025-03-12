@@ -1,11 +1,10 @@
-def main(args: Array<string>, env: Array<string>) -> int {
+def main() -> int {
 	// TODO: URGENT read logging path from environment variable for debugging
   LogManager.initLogging("/home/linxuanm/workspace/virgil-lsp/virgil-lsp-log.txt");
 
-	System.puts(Strings.format1("%d", env.length));
+	var server = Server.new();
+	var exit_code = server.loop();
 
-	var server = LSP.new();
-	while (true) server.loop();
-
-  return 0;
+	server.log.put1("Program terminated with exit code %d.", exit_code);
+  return exit_code;
 }

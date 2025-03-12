@@ -2,21 +2,23 @@ class IncomingData extends JsonDeserializable { def logContent(log: Logger); }
 class OutgoingData extends JsonSerializable { def logContent(log: Logger); }
 
 enum IncomingDataKind(method: string, factory: () -> IncomingData) {
-	INITIALIZE_PACKET("initialize", InitializePacket.new)
+	INITIALIZE_PACKET("initialize", InitializePacket.new),
+	SHUTDOWN_PACKET("shutdown", EmptyPacket.new),
+	EXIT_PACKET("exit", EmptyPacket.new)
 }
 
 class ResponseError(
-	code: int,
+	error: ErrorCodes,
 	message: string,
 	data: OutgoingData // nullable
 ) extends OutgoingData {
 	def serialize() -> JsonValue {
-		var b = JsonBuilder.new().num("code", code).str("message", message);
+		var b = JsonBuilder.new().num("code", error.code).str("message", message);
 		if (data != null) b.add("data", data.serialize());
 		return b.build();
 	}
 	def logContent(log: Logger) {
-		log.put1("Error code: %d", code);
+		log.put2("Error code: %d (%s)", error.code, error.name);
 		log.put1("Message: %s", message);
 		if (data != null) log.putBlock("Data:", data.logContent);
 	}
@@ -31,6 +33,13 @@ type ResponseMessage {
 class UnsupportedMethodPacket extends IncomingData {
 	var data: JsonNav;
 	def deserialize(nav: JsonNav) -> bool { data = nav; return true; }
+	def logContent(log: Logger) { log.puts("<unsupported method packet>"); }
+}
+
+// Used for packets without a payload, e.g., shutdown or exit.
+class EmptyPacket extends IncomingData {
+	def deserialize(nav: JsonNav) -> bool { return true; }
+	def logContent(log: Logger) { log.puts("<empty packet>"); }
 }
 
 class ClientInfo extends IncomingData {
@@ -99,4 +108,8 @@ class InitializeResult(
 		log.putBlock("Capabilities:", capabilities.logContent);
 		if (server_info != null) log.putBlock("Server info:", server_info.logContent);
 	}
+}
+class ShutdownResult extends OutgoingData {
+	def serialize() -> JsonValue { return JsonValue.Null; }
+	def logContent(log: Logger) { log.puts("Shutdown"); }
 }

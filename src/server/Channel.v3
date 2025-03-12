@@ -1,6 +1,5 @@
 type ReadPacketResult {
-	case InvalidPacket(err: string);
-	case InvalidJsonFormat(err: string);
+	case RPCError(err: ErrorCodes);
 	case Success(method: string, packet: IncomingData);
 }
 
@@ -33,17 +32,17 @@ class Channel(file_desc: int) {
 	
 	def read() -> ReadPacketResult {
 		var data = receiver.parseJson();
-		if (!receiver.ok) return ReadPacketResult.InvalidPacket(receiver.getAndClearError());
+		if (!receiver.ok) return ReadPacketResult.RPCError(ErrorCodes.PARSE_ERROR);
 		var r = JsonNav.new("packet", null, data);
 		var method = r.readS("method");
-		var params = r.readO("params");
-		if (!r.ok) return ReadPacketResult.InvalidJsonFormat(r.err_msg);
+		var params = r.readOD("params", null);
+		if (!r.ok) return ReadPacketResult.RPCError(ErrorCodes.INVALID_PARAMS);
 		for (k in IncomingDataKind) {
 			if (Strings.equal(method, k.method)) {
 				var packet = k.factory();
 				if (!packet.deserialize(params)) {
 					var msg = Strings.format1("Failed to deserialize packet of method \"%s\"", method);
-					return ReadPacketResult.InvalidJsonFormat(msg);
+					return ReadPacketResult.RPCError(ErrorCodes.INVALID_PARAMS);
 				}
 				if (Log.packet) log.putBlock(Strings.format1("Read \"%s\" packet:", method), packet.logContent);
 				return ReadPacketResult.Success(method, packet);
@@ -69,5 +68,9 @@ class Channel(file_desc: int) {
 			}
 		}
 		sender.sendJson(b.build());
+	}
+
+	def sendSimpleError(err: ErrorCodes) {
+		send(ResponseMessage.Error(ResponseError.new(err, err.name, null)));
 	}
 }
