@@ -1,5 +1,9 @@
-def main() -> int {
+def main(args: Array<string>, env: Array<string>) -> int {
+	// TODO: URGENT read logging path from environment variable for debugging
   LogManager.initLogging("/home/linxuanm/workspace/virgil-lsp/virgil-lsp-log.txt");
+
+	System.puts(Strings.format1("%d", env.length));
+
 	var server = LSP.new();
 	while (true) server.loop();
 
