@@ -1,7 +1,6 @@
 class EventBusSubscriber<I> {
 	def log = Logger.new("event");
 	def subscribers = Strings.newMap<Vector<I -> ()>>();
-	var filter: (string, I) -> bool; // nullable
 
 	def register(event: string, handler: I -> ()) -> this {
 		if (Log.event) log.put1("Registering subscriber for event \"%s\".", event);
@@ -11,14 +10,10 @@ class EventBusSubscriber<I> {
 	}
 	def fire(event: string, data: I) {
 		if (Log.event) log.put1("Firing subscribers for event \"%s\".", event);
-		if (!filter(event, data)) {
-			if (Log.event) log.put1("Event \"%s\" cancelled by event bus filter.", event);
-			return;
-		}
 		var handlers = subscribers[event];
 		if (handlers != null) {
 			for (i < handlers.length) handlers[i](data);
 			if (Log.event) log.put2("Fired %d subscribers for event \"%s\".", handlers.length, event);
-		}
+		} else if (Log.event) log.put1("No subscribers found for event \"%s\".", event);
 	}
 }

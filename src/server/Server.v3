@@ -19,7 +19,6 @@ class Server {
 	def register_packet_subscriber = subscriber.register;
 
 	new() {
-		subscriber.filter = filterEvent;
 		register_packet_subscriber("initialize", initialize);
 		register_packet_subscriber("shutdown", shutdown);
 		register_packet_subscriber("exit", exit);
@@ -56,28 +55,21 @@ class Server {
 			var packet = comm.read();
 			match (packet) {
 				RPCError(e) => comm.sendSimpleError(e);
-				Success(method, data) => subscriber.fire(method, data);
+				Success(method, data) => {
+					if (state == ServerState.UNINITIALIZED && !Strings.equal(method, "initialize")) {
+						comm.sendSimpleError(ErrorCodes.SERVER_NOT_INITIALIZED);
+						continue;
+					}
+					if (state == ServerState.SHUTDOWN && !Strings.equal(method, "exit")) {
+						comm.sendSimpleError(ErrorCodes.INVALID_REQUEST);
+						continue;
+					}
+					subscriber.fire(method, data);
+				}
 			}
 		}
 		log.puts("Exiting server main loop.");
 		return exit_code;
-	}
-
-	// Used to disable the event bus based on the current {Server.state}.
-	// e.g., if any packet other than "initialize" is received when the server is
-	// uninitialized, cancel the event and send a {SERVER_NOT_INITIALIZED} error.
-	private def filterEvent(method: string, packet: IncomingData) -> bool {
-		if (state == ServerState.UNINITIALIZED && !Strings.equal(method, "initialize")) {
-			comm.sendSimpleError(ErrorCodes.SERVER_NOT_INITIALIZED);
-			return false;
-		}
-
-		if (state == ServerState.SHUTDOWN && !Strings.equal(method, "exit")) {
-			comm.sendSimpleError(ErrorCodes.INVALID_REQUEST);
-			return false;
-		}
-
-		return true;
 	}
 }
 
