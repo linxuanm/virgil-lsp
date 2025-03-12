@@ -26,6 +26,10 @@ class LSP {
 		config.root_path = p.root_path;
 		state = ServerState.RUNNING;
 		if (Log.server) log.put1("Server started on workspace %s.", config.root_path);
+
+		var capabilities = ServerCapabilities.new();
+		var server_info = ServerInfo.new("Virgil Server :3", "0.1.0");
+		comm.send(ResponseMessage.Data(InitializeResult.new(capabilities, server_info)));
 	}
 
 	def loop() {

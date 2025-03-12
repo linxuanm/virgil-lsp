@@ -68,10 +68,14 @@ class InitializePacket extends IncomingData {
 	}
 }
 
-class ServerCapabilities extends OutgoingData { }
-class ServerInfo extends OutgoingData {
-	var name: string;
-	var version: string; // nullable
+class ServerCapabilities extends OutgoingData {
+	def serialize() -> JsonValue { return JsonBuilder.new().build(); }
+	def logContent(log: Logger) {}
+}
+class ServerInfo(
+	name: string,
+	version: string // nullable
+) extends OutgoingData {
 	def serialize() -> JsonValue {
 		var b = JsonBuilder.new().str("name", name);
 		if (version != null) b.str("version", version);
@@ -82,6 +86,17 @@ class ServerInfo extends OutgoingData {
 		if (version != null) log.put1("Version: %s", version);
 	}
 }
-class InitializeResult extends OutgoingData {
-
+class InitializeResult(
+	capabilities: ServerCapabilities,
+	server_info: ServerInfo // nullable
+) extends OutgoingData {
+	def serialize() -> JsonValue {
+		var b = JsonBuilder.new().add("capabilities", capabilities.serialize());
+		if (server_info != null) b.add("serverInfo", server_info.serialize());
+		return b.build();
+	}
+	def logContent(log: Logger) {
+		log.putBlock("Capabilities:", capabilities.logContent);
+		if (server_info != null) log.putBlock("Server info:", server_info.logContent);
+	}
 }
