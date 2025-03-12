@@ -5,6 +5,28 @@ enum IncomingDataKind(method: string, factory: () -> IncomingData) {
 	INITIALIZE_PACKET("initialize", InitializePacket.new)
 }
 
+class ResponseError(
+	code: int,
+	message: string,
+	data: OutgoingData // nullable
+) extends OutgoingData {
+	def serialize() -> JsonValue {
+		var b = JsonBuilder.new().num("code", code).str("message", message);
+		if (data != null) b.add("data", data.serialize());
+		return b.build();
+	}
+	def logContent(log: Logger) {
+		log.put1("Error code: %d", code);
+		log.put1("Message: %s", message);
+		if (data != null) log.putBlock("Data:", data.logContent);
+	}
+}
+
+type ResponseMessage {
+	case Data(v: OutgoingData);
+	case Error(e: ResponseError);
+}
+
 // If you want to subscribe to an unsupported/WIP method, use this.
 class UnsupportedMethodPacket extends IncomingData {
 	var data: JsonNav;
@@ -42,18 +64,11 @@ class InitializePacket extends IncomingData {
 	}
 	def logContent(log: Logger) {
 		log.put1("Parent process ID: %d", process_id);
-		if (client_info != null) {
-			log.puts("Client info:");
-			log.indent();
-			client_info.logContent(log);
-			log.dedent();
-		}
+		if (client_info != null) log.putBlock("Client info:", client_info.logContent);
 	}
 }
 
-class ServerCapabilities extends OutgoingData {
-
-}
+class ServerCapabilities extends OutgoingData { }
 class ServerInfo extends OutgoingData {
 	var name: string;
 	var version: string; // nullable
@@ -63,7 +78,8 @@ class ServerInfo extends OutgoingData {
 		return b.build();
 	}
 	def logContent(log: Logger) {
-
+		log.put1("Name: %s", name);
+		if (version != null) log.put1("Version: %s", version);
 	}
 }
 class InitializeResult extends OutgoingData {

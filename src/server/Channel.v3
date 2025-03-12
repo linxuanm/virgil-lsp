@@ -4,9 +4,30 @@ type ReadPacketResult {
 	case Success(method: string, packet: IncomingData);
 }
 
+type ResponsePacket(header: Array<string>, content: string);
+class PacketSender(file_desc: int, log: Logger) {
+	def sendJson(data: JsonValue) {
+		var content = Strings.format1("%q", data.render);
+		var header = [Strings.format1("Content-Length: %d", content.length)];
+		var packet = ResponsePacket(header, content);
+		if (Log.packet) log.putBlock("Sending packet:", logPacket(packet, _));
+		sendPacket(packet);
+	}
+	private def logPacket(p: ResponsePacket, placeholder: Logger) {
+		for (header in p.header) log.put2("header[len=%d] '%s'", header.length, header);
+		log.put2("content[len=%d] %s", p.content.length, p.content);
+	}
+	private def sendPacket(p: ResponsePacket) {
+		for (header in p.header) System.puts(Strings.format1("%s\r\n", header));
+		System.puts("\r\n");
+		System.puts(p.content);
+	}
+}
+
 class Channel(file_desc: int) {
 	def log = Logger.new("packet");
 	def receiver = PacketReceiver.new(file_desc, log);
+	def sender = PacketSender.new(file_desc, log);
 
 	var sent_id = 0;
 	
@@ -24,12 +45,7 @@ class Channel(file_desc: int) {
 					var msg = Strings.format1("Failed to deserialize packet of method \"%s\"", method);
 					return ReadPacketResult.InvalidJsonFormat(msg);
 				}
-				if (Log.packet) {
-					log.put1("Deserialized packet of method \"%s\":", method);
-					log.indent();
-					packet.logContent(log);
-					log.dedent();
-				}
+				if (Log.packet) log.putBlock(Strings.format1("Read \"%s\" packet:", method), packet.logContent);
 				return ReadPacketResult.Success(method, packet);
 			}
 		}
@@ -40,6 +56,18 @@ class Channel(file_desc: int) {
 	}
 
 	def send(payload: ResponseMessage) {
-		
+		var b = JsonBuilder.new();
+		b.num("id", sent_id++);
+		match (payload) {
+			Data(v) => {
+				if (Log.packet) log.putBlock("Sending result packet:", v.logContent);
+				b.add("result", v.serialize());
+			}
+			Error(e) => {
+				if (Log.packet) log.putBlock("Sending error packet:", e.logContent);
+				b.add("error", e.serialize());
+			}
+		}
+		sender.sendJson(b.build());
 	}
 }
