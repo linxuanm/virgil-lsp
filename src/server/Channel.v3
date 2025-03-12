@@ -25,7 +25,7 @@ class PacketSender(file_desc: int, log: Logger) {
 
 class Channel(file_desc: int) {
 	def log = Logger.new("packet");
-	def receiver = PacketReceiver.new(file_desc, log);
+	def receiver = PacketReceiver.new(file_desc);
 	def sender = PacketSender.new(file_desc, log);
 
 	var sent_id = 0;

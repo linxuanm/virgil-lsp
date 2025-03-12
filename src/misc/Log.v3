@@ -6,8 +6,9 @@ component Log {
 
 	// options for logging
 	def server = true;
-	def packet = true;
 	def event = true;
+	def rpc = true;
+	def packet = true;
 }
 
 component LogManager {
@@ -16,11 +17,17 @@ component LogManager {
 	def closeLogging() { System.fileClose(fd); }
 }
 
+// The max string length of the "[<category>]" tag at the start of each line.
+def PREFIX_SIZE = 8;
 class Logger(name: string) {
 	var indent_size = 0;
 	private def write(s: string) {
-		var msg = Strings.format3("[%s] %q%s\n", name, indentLine(indent_size, _), s);
-		System.write(LogManager.fd, msg);
+		var b = StringBuilder.new()
+			.put1("[%s]", name)
+			.pad(' ', PREFIX_SIZE)
+			.put2(" %q%s", indentLine(indent_size, _), s)
+			.ln();
+		System.write(LogManager.fd, b.extract());
 	}
 	def indent() { indent_size++; }
 	def dedent() { indent_size = Ints.max(0, indent_size - 1); }
