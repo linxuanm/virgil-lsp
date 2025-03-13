@@ -105,6 +105,10 @@ class ProtocolParser(conn: IOStream<byte>, log: Logger) extends Throwable<string
 	// Reads a header. Returns true if there are more unread headers.
 	private def readHeader() -> bool {
 		var raw = IOStreams.readUntil(conn, "\r\n", HEADER_MAX_LEN);
+		if (!conn.ok) {
+			conn.clearError();
+			return err("stream error while reading RPC header");
+		}
 		if (raw.length == 0) return false; // End of header section.
 		if (Log.rpc) log.put2("  header[len=%d]: '%s'", raw.length, raw);
 		var header = Strings.split(raw, ": ", -1);
@@ -127,7 +131,7 @@ class ProtocolParser(conn: IOStream<byte>, log: Logger) extends Throwable<string
 
 	private def readC() -> byte {
 		var b = conn.supply();
-		if (b < 0) return err("error reading packet bytes");
+		if (!conn.ok) return err(conn.getAndClearError());
 		return b;
 	}
 }

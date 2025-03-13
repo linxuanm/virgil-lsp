@@ -1,4 +1,4 @@
-class IOStream<T> {
+class IOStream<T> extends Throwable<string> {
 	def supply() -> T;
 	def write(vs: Range<T>);
 }
@@ -11,6 +11,7 @@ component IOStreams {
 		var out = Vector<T>.new();
 		for (i < max) {
 			out.put(s.supply());
+			if (!s.ok) break;
 			if (out.send(Ranges.endsWith(_, end))) break;
 		}
 		out.resize(out.length - end.length);
@@ -19,7 +20,18 @@ component IOStreams {
 }
 
 class FileStream(file_desc: int) extends IOStream<byte> {
-	def supply() -> byte { return byte.!(System.fileRead(file_desc)); }
+	def supply() -> byte {
+		var res = System.fileRead(file_desc);
+		if (res < 0) return err("error reading file");
+		return byte.!(res);
+	}
 	// TODO: fix {System.write} not working for some reason
 	def write(vs: Range<byte>) { System.puts(Ranges.dup(vs)); }
+}
+
+// Mainly used for testing the LSP by simulating a client connection.
+class BufferStream extends IOStream<byte> {
+	def queue = ArrayQueue<byte>.new();
+	def supply() -> byte { return if(queue.empty(), err("empty queue"), queue.pop()); }
+	def write(vs: Range<byte>) { for (i in vs) queue.push(i); }
 }
