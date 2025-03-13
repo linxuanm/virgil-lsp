@@ -20,5 +20,6 @@ component IOStreams {
 
 class FileStream(file_desc: int) extends IOStream<byte> {
 	def supply() -> byte { return byte.!(System.fileRead(file_desc)); }
-	def write(vs: Range<byte>) { System.write(file_desc, vs); }
+	// TODO: fix {System.write} not working for some reason
+	def write(vs: Range<byte>) { System.puts(Ranges.dup(vs)); }
 }
