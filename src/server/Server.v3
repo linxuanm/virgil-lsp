@@ -6,10 +6,9 @@ enum ServerState {
 }
 
 // The main class for handling LSP lifecycle.
-class Server(conn: IOStream<byte>) {
+class Server(config: ServerConfig, conn: IOStream<byte>) {
 
 	def log = Logger.new("server");
-	def config = ServerConfig.new();
 	def comm = Communication.new(conn);
 	def subscriber = EventBusSubscriber<IncomingData>.new();
 
@@ -74,5 +73,15 @@ class Server(conn: IOStream<byte>) {
 }
 
 class ServerConfig {
+	var log_path: string;
 	var root_path: string;
+
+	def parseOptions(args: Range<string>) {
+		for (i < args.length) {
+			if (Strings.equal(args[i], "--log") && i + 1 < args.length) {
+				log_path = args[i + 1];
+				LogManager.initLogging(log_path);
+			}
+		}
+	}
 }

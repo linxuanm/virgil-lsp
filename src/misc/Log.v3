@@ -12,7 +12,7 @@ component Log {
 }
 
 component LogManager {
-	var fd: int;
+	var fd = -1;
 	def initLogging(path: string) { fd = System.fileOpen(path, false); }
 	def closeLogging() { System.fileClose(fd); }
 }
@@ -22,6 +22,7 @@ def PREFIX_SIZE = 8;
 class Logger(name: string) {
 	var indent_size = 0;
 	private def write(s: string) {
+		if (LogManager.fd < 0) return;
 		var b = StringBuilder.new()
 			.put1("[%s]", name)
 			.pad(' ', PREFIX_SIZE)
