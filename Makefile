@@ -11,6 +11,6 @@ test:
 
 clean:
 	rm -f virgil-lsp
-	rm -f log.txt
+	rm -f virgil-lsp-log.txt
 
 .PHONY: clean build test
