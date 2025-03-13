@@ -1,5 +1,39 @@
-component PacketFormat {
-	def HEADER_MAX_LEN = 50;
+// RPC error codes.
+enum ErrorCodes(code: int) {
+	// Json RPC error codes.
+	PARSE_ERROR(-32700),
+	INVALID_REQUEST(-32600),
+	METHOD_NOT_FOUND(-32601),
+	INVALID_PARAMS(-32602),
+	INTERNAL_ERROR(-32603),
+	SERVER_NOT_INITIALIZED(-32002),
+	UNKNOWN_ERROR_CODE(-32001),
+
+	// VSCode LSP error codes.
+	REQUEST_FAILED(-32803),
+	SERVER_CANCELLED(-32802),
+	CONTENT_MODIFIED(-32801),
+	REQUEST_CANCELLED(-32800),
+}
+
+type ResponsePacket(header: Array<string>, content: string);
+class PacketSender(file_desc: int, log: Logger) {
+	def sendJson(data: JsonValue) {
+		var content = Strings.format1("%q", data.render);
+		var header = [Strings.format1("Content-Length: %d", content.length)];
+		var packet = ResponsePacket(header, content);
+		if (Log.packet) log.putBlock("Sending packet:", logPacket(packet, _));
+		sendPacket(packet);
+	}
+	private def logPacket(p: ResponsePacket, placeholder: Logger) {
+		for (header in p.header) log.put2("header[len=%d] '%s'", header.length, header);
+		log.put2("content[len=%d] %s", p.content.length, p.content);
+	}
+	private def sendPacket(p: ResponsePacket) {
+		for (header in p.header) System.puts(Strings.format1("%s\r\n", header));
+		System.puts("\r\n");
+		System.puts(p.content);
+	}
 }
 
 enum HeaderField(head: string) {
@@ -7,6 +41,7 @@ enum HeaderField(head: string) {
 	CONTENT_TYPE("Content-Type")
 }
 
+def HEADER_MAX_LEN = 50;
 class PacketReceiver(file_desc: int) extends Throwable<string> {
 	def log = Logger.new("rpc");
 
