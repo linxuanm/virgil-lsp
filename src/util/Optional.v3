@@ -10,21 +10,21 @@ type Optional<T> {
 	}
 }
 
-type Either<A, B> {
-	case Left(value: A);
-	case Right(value: B);
+type Result<A, B> {
+	case Fail(value: A);
+	case Success(value: B);
 
-	def mapL<C>(f: A -> C) -> Either<C, B> {
+	def mapFail<C>(f: A -> C) -> Result<C, B> {
 		match (this) {
-			Left(v) => return Either.Left(f(v));
-			Right(v) => return Either.Right(v);
+			Fail(v) => return Result.Fail(f(v));
+			Success(v) => return Result.Success(v);
 		}
 	}
 
-	def mapR<C>(f: B -> C) -> Either<A, C> {
+	def mapSuccess<C>(f: B -> C) -> Result<A, C> {
 		match (this) {
-			Left(v) => return Either.Left(v);
-			Right(v) => return Either.Right(f(v));
+			Fail(v) => return Result.Fail(v);
+			Success(v) => return Result.Success(f(v));
 		}
 	}
 }

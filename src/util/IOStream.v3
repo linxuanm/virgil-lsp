@@ -1,0 +1,24 @@
+class IOStream<T> {
+	def supply() -> T;
+	def write(vs: Range<T>);
+}
+
+component IOStreams {
+	def STDIO = FileStream.new(0);
+
+	// Read until {end} is encountered or {max} elements are read.
+	def readUntil<T>(s: IOStream<T>, end: Range<T>, max: int) -> Array<T> {
+		var out = Vector<T>.new();
+		for (i < max) {
+			out.put(s.supply());
+			if (out.send(Ranges.endsWith(_, end))) break;
+		}
+		out.resize(out.length - end.length);
+		return out.extract();
+	}
+}
+
+class FileStream(file_desc: int) extends IOStream<byte> {
+	def supply() -> byte { return byte.!(System.fileRead(file_desc)); }
+	def write(vs: Range<byte>) { System.write(file_desc, vs); }
+}

@@ -16,25 +16,7 @@ enum ErrorCodes(code: int) {
 	REQUEST_CANCELLED(-32800),
 }
 
-type ResponsePacket(header: Array<string>, content: string);
-class PacketSender(file_desc: int, log: Logger) {
-	def sendJson(data: JsonValue) {
-		var content = Strings.format1("%q", data.render);
-		var header = [Strings.format1("Content-Length: %d", content.length)];
-		var packet = ResponsePacket(header, content);
-		if (Log.packet) log.putBlock("Sending packet:", logPacket(packet, _));
-		sendPacket(packet);
-	}
-	private def logPacket(p: ResponsePacket, placeholder: Logger) {
-		for (header in p.header) log.put2("header[len=%d] '%s'", header.length, header);
-		log.put2("content[len=%d] %s", p.content.length, p.content);
-	}
-	private def sendPacket(p: ResponsePacket) {
-		for (header in p.header) System.puts(Strings.format1("%s\r\n", header));
-		System.puts("\r\n");
-		System.puts(p.content);
-	}
-}
+type RPCResponse(header: Array<string>, content: string);
 
 enum HeaderField(head: string) {
 	CONTENT_LENGTH("Content-Length"),
@@ -42,30 +24,21 @@ enum HeaderField(head: string) {
 }
 
 def HEADER_MAX_LEN = 50;
-class PacketReceiver(file_desc: int) extends Throwable<string> {
+class RPC(conn: IOStream<byte>) {
 	def log = Logger.new("rpc");
+	def parser = ProtocolParser.new(conn, log);
 
-	var pk_length: int;
-	var pk_type: string;
-	var fd: int;
-
-	new() { reset(); }
-
-	def reset() {
-		pk_length = -1;
-		pk_type = "utf-8";
-		fd = -1;
-		ok = true;
-	}
-
-	def parseJson() -> JsonValue.JObject {
-		var text = parse();
-		if (text == null) return JsonValue.JObject(null);
-		var parser = JsonParser.new(text);
-		var result = parser.parseValue();
+	def readJson() -> Result<ErrorCodes, JsonValue.JObject> {
+		var text = parser.parse();
 		if (!parser.ok) {
-			if (Log.rpc) log.put1("JSON PARSE ERROR: %s", parser.error_msg);
-			return err(parser.error_msg);
+			parser.clearError();
+			return Result.Fail(ErrorCodes.PARSE_ERROR);
+		}
+		var jp = JsonParser.new(text);
+		var result = jp.parseValue();
+		if (!jp.ok) {
+			if (Log.rpc) log.put1("JSON PARSE ERROR: %s", jp.error_msg);
+			return Result.Fail(ErrorCodes.PARSE_ERROR);
 		}
 		var json = JsonValue.JObject.!(result);
 		if (Log.rpc) {
@@ -73,13 +46,44 @@ class PacketReceiver(file_desc: int) extends Throwable<string> {
 			var entries = MapCollector.new(Strings.asciiLt, json.v).extract();
 			log.put1("  json_packet[entries=%d]", entries.length);
 		}
-		return json;
+		return Result.Success(json);
+	}
+
+	def sendJson(data: JsonValue) {
+		var content = Strings.format1("%q", data.render);
+		var header = [Strings.format1("Content-Length: %d", content.length)];
+		var packet = RPCResponse(header, content);
+		if (Log.packet) log.putBlock("Sending packet:", logPacket(packet, _));
+		sendPacket(packet);
+	}
+
+	private def logPacket(p: RPCResponse, placeholder: Logger) {
+		for (header in p.header) log.put2("header[len=%d] '%s'", header.length, header);
+		log.put2("content[len=%d] %s", p.content.length, p.content);
+	}
+
+	private def sendPacket(p: RPCResponse) {
+		for (header in p.header) conn.write(Strings.format1("%s\r\n", header));
+		conn.write("\r\n");
+		conn.write(p.content);
+	}
+}
+
+class ProtocolParser(conn: IOStream<byte>, log: Logger) extends Throwable<string> {
+	var pk_length: int;
+	var pk_type: string;
+
+	new() { reset(); }
+
+	def reset() {
+		pk_length = -1;
+		pk_type = "utf-8";
+		ok = true;
 	}
 
 	def parse() -> string {
 		if (Log.rpc) log.puts("Parsing packet:");
 		reset();
-		fd = file_desc;
 		while (readHeader()) {
 			if (!ok) return null;
 		}
@@ -100,7 +104,7 @@ class PacketReceiver(file_desc: int) extends Throwable<string> {
 
 	// Reads a header. Returns true if there are more unread headers.
 	private def readHeader() -> bool {
-		var raw = Streams.readUntil(readC, "\r\n", PacketFormat.HEADER_MAX_LEN);
+		var raw = IOStreams.readUntil(conn, "\r\n", HEADER_MAX_LEN);
 		if (raw.length == 0) return false; // End of header section.
 		if (Log.rpc) log.put2("  header[len=%d]: '%s'", raw.length, raw);
 		var header = Strings.split(raw, ": ", -1);
@@ -122,8 +126,8 @@ class PacketReceiver(file_desc: int) extends Throwable<string> {
 	}
 
 	private def readC() -> byte {
-		var b = System.fileRead(fd);
+		var b = conn.supply();
 		if (b < 0) return err("error reading packet bytes");
-		return byte.!(b);
+		return b;
 	}
 }

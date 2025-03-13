@@ -6,11 +6,11 @@ enum ServerState {
 }
 
 // The main class for handling LSP lifecycle.
-class Server {
+class Server(conn: IOStream<byte>) {
 
 	def log = Logger.new("server");
 	def config = ServerConfig.new();
-	def comm = Channel.new(0);
+	def comm = Communication.new(conn);
 	def subscriber = EventBusSubscriber<IncomingData>.new();
 
 	var state = ServerState.UNINITIALIZED;
@@ -70,19 +70,6 @@ class Server {
 		}
 		log.puts("Exiting server main loop.");
 		return exit_code;
-	}
-}
-
-component LSPManager {
-	var server: Server;
-
-	def createServer() -> Server {
-		if (server != null) {
-			Log.err.puts("Unable to start server as an instance is already running.");
-			return null;
-		}
-		server = Server.new();
-		return server;
 	}
 }
 

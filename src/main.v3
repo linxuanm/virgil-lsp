@@ -2,7 +2,7 @@ def main() -> int {
 	// TODO: URGENT read logging path from environment variable for debugging
   LogManager.initLogging("/home/linxuanm/workspace/virgil-lsp/virgil-lsp-log.txt");
 
-	var server = Server.new();
+	var server = Server.new(IOStreams.STDIO);
 	var exit_code = server.loop();
 
 	server.log.put1("Program terminated with exit code %d.", exit_code);
