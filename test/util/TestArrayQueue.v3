@@ -1,0 +1,75 @@
+def T = UnitTests.registerT("util:queue:", _, ArrayQueueTester.new, _);
+def X_ = void(
+	T("empty", test_empty),
+	T("empty_after_grow", test_empty_after_grow),
+	T("grow", test_grow),
+	T("grow_big", test_grow_big),
+	T("push_and_pop", test_push_and_pop),
+	()
+);
+
+private class ArrayQueueTester(t: Tester) {
+	def testEq<T>(q: ArrayQueue<T>, expected: Array<T>, render: (StringBuilder, T) -> StringBuilder) {
+		var v = Vector<T>.new();
+		while (!q.empty()) v.put(q.pop());
+		t.asserta("queue", expected, v.extract(), render);
+	}
+}
+
+def test_empty(t: ArrayQueueTester) {
+	t.testEq<int>(ArrayQueue<int>.new(), [], StringBuilder.putd_i32);
+	t.testEq<string>(ArrayQueue<string>.new(), [], StringBuilder.puts);
+	t.t.assert(ArrayQueue<int>.new().empty(), "expected empty queue");
+	t.t.assert(ArrayQueue<string>.new().empty(), "expected empty queue");
+
+	var q = ArrayQueue<int>.new();
+	for (i < 3) {
+		q.push(i);
+		t.t.assert(!q.empty(), "expected non-empty queue");
+	}
+	for (i < 3) {
+		t.t.assert(!q.empty(), "expected non-empty queue");
+		q.pop();
+	}
+	t.testEq<int>(q, [], StringBuilder.putd_i32);
+	t.t.assert(q.empty(), "expected empty queue");
+}
+
+def test_empty_after_grow(t: ArrayQueueTester) {
+	var q = ArrayQueue<int>.new();
+	for (i < 100) {
+		q.push(i);
+		t.t.assert(!q.empty(), "expected non-empty queue");
+	}
+	for (i < 100) {
+		t.t.assert(!q.empty(), "expected non-empty queue");
+		q.pop();
+	}
+	t.testEq<int>(q, [], StringBuilder.putd_i32);
+	t.t.assert(q.empty(), "expected empty queue");
+}
+
+def test_grow(t: ArrayQueueTester) {
+	var q = ArrayQueue<int>.new();
+	for (i < 11) q.push(i);
+	for (i < 10) t.t.asserti(i, q.pop());
+}
+
+def test_grow_big(t: ArrayQueueTester) {
+	var q = ArrayQueue<int>.new();
+	for (i < 1000) q.push(i);
+	for (i < 500) t.t.asserti(i, q.pop());
+	for (i < 1000) q.push(i);
+	for (i < 500) t.t.asserti(i + 500, q.pop());
+	for (i < 1000) t.t.asserti(i, q.pop());
+}
+
+def test_push_and_pop(t: ArrayQueueTester) {
+	var q = ArrayQueue<int>.new();
+	for (i < 10) q.push(i);
+	for (i < 5) t.t.asserti(i, q.pop());
+	for (i < 5) q.push(i);
+	for (i < 8196) q.push(i);
+	t.t.asserti(5, q.pop());
+	t.t.asserti(6, q.pop());
+}
