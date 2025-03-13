@@ -1,0 +1,93 @@
+def T = UnitTests.registerT("util:queue:", _, ArrayQueueTester.new, _);
+def X_ = void(
+	T("empty", test_empty),
+	()
+);
+
+private class ArrayQueueTester(t: Tester) {
+	def testEq<T>(q: ArrayQueue<T>, expected: Array<T>, render: (StringBuilder, T) -> StringBuilder) {
+		var v = Vector<T>.new();
+		while (!q.empty()) v.put(q.pop());
+		t.asserta("queue", expected, v.extract(), render);
+	}
+}
+
+def test_empty(t: ArrayQueueTester) {
+	t.testEq<int>(ArrayQueue<int>.new(), [], StringBuilder.putd_i32);
+	t.testEq<string>(ArrayQueue<string>.new(), [], StringBuilder.puts);
+	t.t.assert(ArrayQueue<int>.new().empty(), "expected empty queue");
+	t.t.assert(ArrayQueue<string>.new().empty(), "expected empty queue");
+
+	var q = ArrayQueue<int>.new();
+	for (i < 3) {
+		q.push(i);
+		t.t.assert(!q.empty(), "expected non-empty queue");
+	}
+	for (i < 3) {
+		t.t.assert(!q.empty(), "expected non-empty queue");
+		q.pop();
+	}
+	t.testEq<int>(q, [], StringBuilder.putd_i32);
+	t.t.assert(q.empty(), "expected empty queue");
+}
+
+// def test_at(t: DoubleLinkedListTester) {
+// 	var xs = DoubleLinkedLists.from<int>([1, 2, 3]);
+// 	t.t.assert_eq(xs.at(0), 1);
+// 	t.t.assert_eq(xs.at(1), 2);
+// 	t.t.assert_eq(xs.at(2), 3);
+// }
+
+// def test_delete(t: DoubleLinkedListTester) {
+// 	var xs = DoubleLinkedLists.from<int>([1, 2, 3]);
+// 	xs.delete(1);
+// 	t.testEq<int>(xs, [1, 3], StringBuilder.putd_i32);
+// 	xs.delete(1);
+// 	t.testEq<int>(xs, [1], StringBuilder.putd_i32);
+// 	xs.delete(0);
+// 	t.testEq<int>(xs, [], StringBuilder.putd_i32);
+
+// 	for (i < 100) xs.put(i, i);
+// 	for (i < 100) { t.t.assert_eq(xs.at(0), i); xs.delete(0); }
+
+// 	for (i < 100) xs.put(i, i);
+// 	for (i = 99; i >= 0; i--) { t.t.assert_eq(xs.at(i), i); xs.delete(i); }
+// }
+
+// def test_put(t: DoubleLinkedListTester) {
+// 	var xs = DoubleLinkedLists.from<int>([1, 2, 3]);
+// 	xs.put(1, 6);
+// 	xs.put(3, 5);
+// 	xs.put(5, 4);
+// 	t.testEq<int>(xs, [1, 6, 2, 5, 3, 4], StringBuilder.putd_i32);
+// 	xs.put(0, -1);
+// 	xs.put(0, -2);
+// 	t.testEq<int>(xs, [-2, -1, 1, 6, 2, 5, 3, 4], StringBuilder.putd_i32);
+// 	// append to end if index out of bound
+// 	xs.put(50, 10);
+// 	xs.put(69, 2);
+// 	t.testEq<int>(xs, [-2, -1, 1, 6, 2, 5, 3, 4, 10, 2], StringBuilder.putd_i32);
+
+// 	xs = DoubleLinkedList.new();
+// 	for (i < 5) xs.put(0, i);
+// 	t.testEq<int>(xs, [4, 3, 2, 1, 0], StringBuilder.putd_i32);
+
+// 	xs = DoubleLinkedList.new();
+// 	for (i < 5) xs.put(i, i);
+// 	t.testEq<int>(xs, [0, 1, 2, 3, 4], StringBuilder.putd_i32);
+// }
+
+// def test_pop(t: DoubleLinkedListTester) {
+// 	var xs = DoubleLinkedLists.from<int>([1, 2]);
+// 	t.t.assert_eq(xs.popFront(), 1);
+// 	t.t.assert_eq(xs.popBack(), 2);
+// 	t.testEq<int>(xs, [], StringBuilder.putd_i32);
+
+// 	xs = DoubleLinkedLists.from<int>([-9, -8, -7, -6, -5, -4, -3]);
+// 	t.t.assert_eq(xs.popBack(), -3);
+// 	t.t.assert_eq(xs.popBack(), -4);
+// 	t.t.assert_eq(xs.popBack(), -5);
+// 	t.t.assert_eq(xs.popFront(), -9);
+// 	t.t.assert_eq(xs.popFront(), -8);
+// 	t.testEq<int>(xs, [-7, -6], StringBuilder.putd_i32);
+// }
