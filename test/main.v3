@@ -1,5 +1,4 @@
 def main() -> int {
-	UnitTests.run([]);
-
-	return 0;
+	var exit_code = UnitTests.run([]);
+	return exit_code;
 }
