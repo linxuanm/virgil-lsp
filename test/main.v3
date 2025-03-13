@@ -1,23 +1,4 @@
-class MyReader(s: string) {
-	var i = 0;
-
-	def read() -> byte {
-		return s[i++];
-	}
-}
-
 def main() -> int {
-	// var reader = MyReader.new("Content-Length: 5872\r\n\r\n");
-	// var s = Stream.readUntil(reader.read, "\r\n", PacketFormat.HEADER_MAX_LEN);
-	// System.puts(Strings.format2("Read[len=%d] %s\n", s.length, s));
-	// System.puts(Strings.format1("Reader[i=%d]\n", reader.i));
-
-	// System.puts("\n");
-
-	// s = Stream.readUntil(reader.read, "\r\n", PacketFormat.HEADER_MAX_LEN);
-	// System.puts(Strings.format2("Read[len=%d] %s\n", s.length, s));
-	// System.puts(Strings.format1("Reader[i=%d]\n", reader.i));
-
 	UnitTests.run([]);
 
 	return 0;
