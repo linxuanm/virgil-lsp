@@ -100,5 +100,5 @@ def test_pop(t: DoubleLinkedListTester) {
 	t.t.assert_eq(xs.popBack(), -5);
 	t.t.assert_eq(xs.popFront(), -9);
 	t.t.assert_eq(xs.popFront(), -8);
-	t.testEq<int>(xs, [-7, -6], StringBuilder.putd_i32);
+	t.testEq<int>(xs, [-7, -67], StringBuilder.putd_i32);
 }
