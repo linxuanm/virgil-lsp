@@ -1,0 +1,48 @@
+// Implementation of a queue with array, using a ring buffer.
+class ArrayQueue<T> {
+	var array: Array<T>;
+	var start: int;
+	var end: int;
+	var size: int;
+
+	new() {
+		array = Array<T>.new(10);
+		start = 0;
+		end = 0;
+		size = 0;
+	}
+
+	def empty() -> bool {
+		return size == 0;
+	}
+
+	def pop() -> T {
+		var v = array[start++];
+		if (start >= array.length) start = 0;
+		size--;
+		return v;
+	}
+
+	def push(v: T) {
+		if (size >= array.length) grow(array.length * 2 + 1);
+		array[end++] = v;
+		if (end >= array.length) end = 0;
+		size++;
+	}
+
+	private def grow(new_size: int) {
+		var new_array = Array<T>.new(new_size);
+		if (start < end) {
+			// linear
+			for (i = start; i < end; i++) new_array[i - start] = array[i];
+			start = 0;
+			end = size;
+		} else {
+			// wrapped around
+			var seg = array.length - start;
+			for (i = start; i < array.length; i++) new_array[i - start] = array[i];
+			for (i = 0; i < end; i++) new_array[seg + i] = array[i];
+		}
+		array = new_array;
+	}
+}
