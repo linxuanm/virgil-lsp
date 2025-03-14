@@ -6,7 +6,7 @@ enum ServerState {
 }
 
 // The main class for handling LSP lifecycle.
-class Server(config: ServerConfig, conn: IOStream<byte>) {
+class Server(config: ServerConfig, cap: ServerCapabilities, conn: IOStream<byte>) {
 
 	def log = Logger.new("server");
 	def comm = Communication.new(conn);
@@ -25,13 +25,12 @@ class Server(config: ServerConfig, conn: IOStream<byte>) {
 
 	def initialize(packet: IncomingData) {
 		var p = InitializePacket.!(packet);
-		config.root_path = p.root_path;
 		state = ServerState.RUNNING;
-		if (Log.server) log.put1("Server started on workspace %s.", config.root_path);
+		if (Log.server) log.puts("Server started.");
 
-		var capabilities = ServerCapabilities.new();
+		var cap_data = ServerCapabilitiesData.new(cap);
 		var server_info = ServerInfo.new("Virgil Server :3", "0.1.0");
-		comm.send(ResponseMessage.Data(InitializeResult.new(capabilities, server_info)));
+		comm.send(ResponseMessage.Data(InitializeResult.new(cap_data, server_info)));
 	}
 
 	def shutdown(packet: IncomingData) {
@@ -74,7 +73,6 @@ class Server(config: ServerConfig, conn: IOStream<byte>) {
 
 class ServerConfig {
 	var log_path: string;
-	var root_path: string;
 
 	def parseOptions(args: Range<string>) {
 		for (i < args.length) {

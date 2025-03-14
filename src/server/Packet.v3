@@ -77,9 +77,25 @@ class InitializePacket extends IncomingData {
 	}
 }
 
-class ServerCapabilities extends OutgoingData {
-	def serialize() -> JsonValue { return JsonBuilder.new().build(); }
-	def logContent(log: Logger) {}
+class ServerCapabilitiesData(cap: ServerCapabilities) extends OutgoingData {
+	def serialize() -> JsonValue {
+		var b = JsonBuilder.new();
+		b.add(
+			"textDocumentSync",
+			JsonBuilder.new()
+				.boo("openClose", cap.text_document_sync.open_close)
+				.num("change", cap.text_document_sync.change.v)
+				.build()
+		);
+
+		return b.build();
+	}
+	def logContent(log: Logger) {
+		log.puts("Text document sync options:"); log.indent(); {
+			log.put1("Open/close notifications: %s", if(cap.text_document_sync.open_close, "true", "false"));
+			log.put2("Sync kind: %s(%d)", cap.text_document_sync.change.name, cap.text_document_sync.change.v);
+		} log.dedent();
+	}
 }
 class ServerInfo(
 	name: string,
@@ -96,7 +112,7 @@ class ServerInfo(
 	}
 }
 class InitializeResult(
-	capabilities: ServerCapabilities,
+	capabilities: ServerCapabilitiesData,
 	server_info: ServerInfo // nullable
 ) extends OutgoingData {
 	def serialize() -> JsonValue {
