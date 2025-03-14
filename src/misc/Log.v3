@@ -5,7 +5,7 @@ component Log {
 	def err = Logger.new("ERROR");
 
 	// options for logging
-	def server = true;
+	def session = true;
 	def event = true;
 	def rpc = true;
 	def packet = true;
@@ -18,7 +18,7 @@ component LogManager {
 }
 
 // The max string length of the "[<category>]" tag at the start of each line.
-def PREFIX_SIZE = 8;
+def PREFIX_SIZE = 9;
 class Logger(name: string) {
 	var indent_size = 0;
 	private def write(s: string) {
