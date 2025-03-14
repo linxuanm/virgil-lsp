@@ -1,16 +1,9 @@
 // Type encoding for various client/server capabilities.
 
+enum TextDocumentSyncKind(v: int) { NONE(0), FULL(1), INCREMENTAL(2) }
+type TextDocumentSyncOptions(open_close: bool, change: TextDocumentSyncKind);
 class ServerCapabilities {
-	var position_encoding = PositionEncodingKind.UTF16;
-	var text_document_sync = TextDocumentSyncOptions(false, TextDocumentSyncKind.NONE);
-	// TODO: notebookDocumentSync
-	// TODO: completionProvider
-	var hoverProvider = false;
+	var text_document_sync = TextDocumentSyncOptions(true, TextDocumentSyncKind.NONE);
 }
 
-enum PositionEncodingKind(kind: string) { UTF16("utf-16"), UTF8("utf-8"), UTF32("utf-32") }
-enum TextDocumentSyncKind(kind: int) { NONE(0), FULL(1), INCREMENTAL(2) }
-type TextDocumentSyncOptions(open_close: bool, change: TextDocumentSyncKind);
-// TODO: notebookDocumentSync
-// TODO: completionProvider
-// TODO: 
+
