@@ -14,7 +14,7 @@ component Log {
 component LogManager {
 	var fd = -1;
 	def initLogging(path: string) { fd = System.fileOpen(path, false); }
-	def closeLogging() { System.fileClose(fd); }
+	def closeLogging() { if (fd >= 0) System.fileClose(fd); }
 }
 
 // The max string length of the "[<category>]" tag at the start of each line.

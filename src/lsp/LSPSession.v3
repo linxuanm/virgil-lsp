@@ -6,9 +6,9 @@ enum SessionState {
 }
 
 // The main class for handling LSP lifecycle.
-class LSPSession(config: ServerConfig, cap: ServerCapabilities, conn: IOStream<byte>) {
+class LSPSession(config: ServerConfig, conn: IOStream<byte>) {
 
-	def log = Logger.new("server");
+	def log = Logger.new("session");
 	def comm = Communication.new(conn);
 	def subscriber = EventBusSubscriber<IncomingData>.new();
 
@@ -24,19 +24,13 @@ class LSPSession(config: ServerConfig, cap: ServerCapabilities, conn: IOStream<b
 	}
 
 	def initialize(packet: IncomingData) {
-		var p = InitializePacket.!(packet);
 		state = SessionState.RUNNING;
 		if (Log.session) log.puts("Session started.");
-
-		var cap_data = ServerCapabilitiesData.new(cap);
-		var server_info = ServerInfo.new("Virgil Server :3", "0.1.0");
-		comm.send(ResponseMessage.Data(InitializeResult.new(cap_data, server_info)));
 	}
 
 	def shutdown(packet: IncomingData) {
-		if (Log.session) log.puts("Session received SHUTDOWN.");
 		state = SessionState.SHUTDOWN;
-		comm.send(ResponseMessage.Data(ShutdownResult.new()));
+		if (Log.session) log.puts("Session received SHUTDOWN.");
 	}
 
 	def exit(packet: IncomingData) {

@@ -1,0 +1,28 @@
+class V3LanguageServer(config: ServerConfig, conn: IOStream<byte>) {
+	def session = LSPSession.new(config, conn);
+
+	def run() -> int {
+		// Note that event handlers registered here are registered and fired after
+		// the handlers from the session lifecycle.
+		registerEvents();
+
+		return session.loop();
+	}
+
+	private def registerEvents() {
+		session.register_packet_subscriber("initialize", initialize);
+		session.register_packet_subscriber("shutdown", shutdown);
+	}
+
+	private def initialize(packet: IncomingData) {
+		var p = InitializePacket.!(packet);
+
+		var cap_data = ServerCapabilitiesData.new(ServerCapabilities.new());
+		var server_info = ServerInfo.new("Virgil Server :3", "0.1.0");
+		session.comm.send(ResponseMessage.Data(InitializeResult.new(cap_data, server_info)));
+	}
+
+	private def shutdown(packet: IncomingData) {
+		session.comm.send(ResponseMessage.Data(ShutdownResult.new()));
+	}
+}
