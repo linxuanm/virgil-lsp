@@ -1,4 +1,4 @@
-enum ServerState {
+enum SessionState {
 	UNINITIALIZED,
 	RUNNING,
 	SHUTDOWN,
@@ -6,13 +6,13 @@ enum ServerState {
 }
 
 // The main class for handling LSP lifecycle.
-class Server(config: ServerConfig, cap: ServerCapabilities, conn: IOStream<byte>) {
+class LSPSession(config: ServerConfig, conn: IOStream<byte>) {
 
-	def log = Logger.new("server");
+	def log = Logger.new("session");
 	def comm = Communication.new(conn);
 	def subscriber = EventBusSubscriber<IncomingData>.new();
 
-	var state = ServerState.UNINITIALIZED;
+	var state = SessionState.UNINITIALIZED;
 	var exit_code = 0;
 
 	def register_packet_subscriber = subscriber.register;
@@ -24,41 +24,35 @@ class Server(config: ServerConfig, cap: ServerCapabilities, conn: IOStream<byte>
 	}
 
 	def initialize(packet: IncomingData) {
-		var p = InitializePacket.!(packet);
-		state = ServerState.RUNNING;
-		if (Log.server) log.puts("Server started.");
-
-		var cap_data = ServerCapabilitiesData.new(cap);
-		var server_info = ServerInfo.new("Virgil Server :3", "0.1.0");
-		comm.send(ResponseMessage.Data(InitializeResult.new(cap_data, server_info)));
+		state = SessionState.RUNNING;
+		if (Log.session) log.puts("Session started.");
 	}
 
 	def shutdown(packet: IncomingData) {
-		if (Log.server) log.puts("Server received SHUTDOWN.");
-		state = ServerState.SHUTDOWN;
-		comm.send(ResponseMessage.Data(ShutdownResult.new()));
+		state = SessionState.SHUTDOWN;
+		if (Log.session) log.puts("Session received SHUTDOWN.");
 	}
 
 	def exit(packet: IncomingData) {
-		if (Log.server) log.puts("Server received EXIT.");
-		if (state != ServerState.SHUTDOWN) {
-			Log.err.puts("Server did not receive SHUTDOWN before EXIT.");
+		if (Log.session) log.puts("Session received EXIT.");
+		if (state != SessionState.SHUTDOWN) {
+			Log.err.puts("Session did not receive SHUTDOWN before EXIT.");
 			exit_code = 1;
 		}
-		state = ServerState.EXIT;
+		state = SessionState.EXIT;
 	}
 
 	def loop() -> int {
-		while (state != ServerState.EXIT) {
+		while (state != SessionState.EXIT) {
 			var packet = comm.read();
 			match (packet) {
 				RPCError(e) => comm.sendSimpleError(e);
 				Success(method, data) => {
-					if (state == ServerState.UNINITIALIZED && !Strings.equal(method, "initialize")) {
+					if (state == SessionState.UNINITIALIZED && !Strings.equal(method, "initialize")) {
 						comm.sendSimpleError(ErrorCodes.SERVER_NOT_INITIALIZED);
 						continue;
 					}
-					if (state == ServerState.SHUTDOWN && !Strings.equal(method, "exit")) {
+					if (state == SessionState.SHUTDOWN && !Strings.equal(method, "exit")) {
 						comm.sendSimpleError(ErrorCodes.INVALID_REQUEST);
 						continue;
 					}
@@ -66,7 +60,7 @@ class Server(config: ServerConfig, cap: ServerCapabilities, conn: IOStream<byte>
 				}
 			}
 		}
-		log.puts("Exiting server main loop.");
+		log.puts("Exiting session main loop.");
 		return exit_code;
 	}
 }

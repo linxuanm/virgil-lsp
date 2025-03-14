@@ -1,9 +1,9 @@
 def main(args: Array<string>) -> int {
 	var config = ServerConfig.new();
 	config.parseOptions(args);
-	var server = Server.new(config, ServerCapabilities.new(), IOStreams.STDIO);
-	var exit_code = server.loop();
-	server.log.put1("Program terminated with exit code %d.", exit_code);
+	var server = V3LanguageServer.new(config, IOStreams.STDIO);
+	var exit_code = server.run();
+	server.session.log.put1("Program terminated with exit code %d.", exit_code);
 	LogManager.closeLogging();
   return exit_code;
 }
