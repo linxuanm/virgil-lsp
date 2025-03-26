@@ -42,19 +42,6 @@ class EmptyPacket extends IncomingData {
 	def logContent(log: Logger) { log.puts("<empty packet>"); }
 }
 
-class ClientInfo extends IncomingData {
-	var name: string;
-	var version: string; // nullable
-	def deserialize(nav: JsonNav) -> bool {
-		name = nav.readS("name");
-		version = nav.readSD("version", null);
-		return nav.ok;
-	}
-	def logContent(log: Logger) {
-		log.put1("Name: %s", name);
-		if (version != null) log.put1("Version: %s", version);
-	}
-}
 class InitializePacket extends IncomingData {
 	var process_id: int;
 	var client_info: ClientInfo; // nullable
@@ -77,42 +64,8 @@ class InitializePacket extends IncomingData {
 	}
 }
 
-class ServerCapabilitiesData(cap: ServerCapabilities) extends OutgoingData {
-	def serialize() -> JsonValue {
-		var b = JsonBuilder.new();
-		b.add(
-			"textDocumentSync",
-			JsonBuilder.new()
-				.boo("openClose", cap.text_document_sync.open_close)
-				.num("change", cap.text_document_sync.change.v)
-				.build()
-		);
-
-		return b.build();
-	}
-	def logContent(log: Logger) {
-		log.puts("Text document sync options:"); log.indent(); {
-			log.put1("Open/close notifications: %s", if(cap.text_document_sync.open_close, "true", "false"));
-			log.put2("Sync kind: %s(%d)", cap.text_document_sync.change.name, cap.text_document_sync.change.v);
-		} log.dedent();
-	}
-}
-class ServerInfo(
-	name: string,
-	version: string // nullable
-) extends OutgoingData {
-	def serialize() -> JsonValue {
-		var b = JsonBuilder.new().str("name", name);
-		if (version != null) b.str("version", version);
-		return b.build();
-	}
-	def logContent(log: Logger) {
-		log.put1("Name: %s", name);
-		if (version != null) log.put1("Version: %s", version);
-	}
-}
 class InitializeResult(
-	capabilities: ServerCapabilitiesData,
+	capabilities: ServerCapabilities,
 	server_info: ServerInfo // nullable
 ) extends OutgoingData {
 	def serialize() -> JsonValue {

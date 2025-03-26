@@ -1,0 +1,30 @@
+// Various types representing the JSON data layout in RPC communication.
+
+class ClientInfo extends IncomingData {
+	var name: string;
+	var version: string; // nullable
+	def deserialize(nav: JsonNav) -> bool {
+		name = nav.readS("name");
+		version = nav.readSD("version", null);
+		return nav.ok;
+	}
+	def logContent(log: Logger) {
+		log.put1("Name: %s", name);
+		if (version != null) log.put1("Version: %s", version);
+	}
+}
+
+class ServerInfo(
+	name: string,
+	version: string // nullable
+) extends OutgoingData {
+	def serialize() -> JsonValue {
+		var b = JsonBuilder.new().str("name", name);
+		if (version != null) b.str("version", version);
+		return b.build();
+	}
+	def logContent(log: Logger) {
+		log.put1("Name: %s", name);
+		if (version != null) log.put1("Version: %s", version);
+	}
+}

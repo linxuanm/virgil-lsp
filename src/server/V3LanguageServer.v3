@@ -17,7 +17,7 @@ class V3LanguageServer(config: ServerConfig, conn: IOStream<byte>) {
 	private def initialize(packet: IncomingData) {
 		var p = InitializePacket.!(packet);
 
-		var cap_data = ServerCapabilitiesData.new(ServerCapabilities.new());
+		var cap_data = ServerCapabilities.new();
 		var server_info = ServerInfo.new("Virgil Server :3", "0.1.0");
 		session.comm.send(ResponseMessage.Data(InitializeResult.new(cap_data, server_info)));
 	}
