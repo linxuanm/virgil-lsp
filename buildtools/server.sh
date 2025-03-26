@@ -12,4 +12,5 @@ fi
 
 MAIN="$PATH_LSP/main.v3"
 $V3C $FILES_LSP $MAIN
-mv main virgil-lsp
+mkdir -p bin
+mv main bin/virgil-lsp

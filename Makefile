@@ -1,4 +1,5 @@
 BUILDTOOLS=buildtools
+BINS=bin/virgil-lsp
 
 
 all: build
@@ -10,7 +11,7 @@ test:
 	bash $(BUILDTOOLS)/test.sh
 
 clean:
-	rm -f virgil-lsp
+	rm -f $(BINS)
 	rm -f virgil-lsp-log.txt
 
 .PHONY: clean build test
