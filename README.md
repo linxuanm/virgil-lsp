@@ -13,10 +13,14 @@ Virgil-LSP is an implementation of the Language Server Protocol (LSP) tailored f
 - [ ] Socket support
 
 ## Installation
-WIP
+
+Clone this repo and build `virgil-lsp` with:
+
 ```sh
 make
 ```
+
+Then add `bin/` to your path.
 
 ## Usage
 
