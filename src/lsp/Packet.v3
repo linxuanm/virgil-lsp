@@ -24,11 +24,6 @@ class ResponseError(
 	}
 }
 
-type ResponseMessage {
-	case Data(v: OutgoingData);
-	case Error(e: ResponseError);
-}
-
 // If you want to subscribe to an unsupported/WIP method, use this.
 class UnsupportedMethodPacket extends IncomingData {
 	var data: JsonNav;
