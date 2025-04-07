@@ -1,3 +1,14 @@
-class Analyzer(config: AnalyzerConfig) {
+type V3File(path: string, data: string);
 
+class V3Analyzer {
+	// Called when a new file is updated or created.
+	def onFileUpdate(file: V3File);
+}
+
+// Only does on-demand processing for sequential file actions.
+class ReactiveAnalyzer(config: AnalyzerConfig) extends V3Analyzer {
+
+	def onFileUpdate(file: V3File) {
+		
+	}
 }

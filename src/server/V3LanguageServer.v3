@@ -28,7 +28,7 @@ class V3LanguageServer(config: ServerConfig, conn: IOStream<byte>) {
 
 	private def getServerCapabilities() -> ServerCapabilities {
 		var cap_data = ServerCapabilities.new();
-		cap_data.text_document_sync = TextDocumentSyncOptions(true, TextDocumentSyncKind.FULL);
+		cap_data.text_document_sync = TextDocumentSyncOptions(true, TextDocumentSyncKind.NONE);
 		return cap_data;
 	}
 }
