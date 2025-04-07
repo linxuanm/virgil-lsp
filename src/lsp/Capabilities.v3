@@ -1,29 +1,30 @@
 // Type encoding for various client/server capabilities.
 
 enum TextDocumentSyncKind(v: int) { NONE(0), FULL(1), INCREMENTAL(2) }
-type TextDocumentSyncOptions(open_close: bool, change: TextDocumentSyncKind);
+class TextDocumentSyncOptions(open_close: bool, change: TextDocumentSyncKind) {}
 
 class ServerCapabilities extends OutgoingData {
-	var text_document_sync = TextDocumentSyncOptions(false, TextDocumentSyncKind.NONE);
-
+	var text_document_sync: TextDocumentSyncOptions;
 	def serialize() -> JsonValue {
 		var b = JsonBuilder.new();
-		b.add(
-			"textDocumentSync",
-			JsonBuilder.new()
-				.boo("openClose", text_document_sync.open_close)
-				.num("change", text_document_sync.change.v)
-				.build()
-		);
+		if (text_document_sync != null) {
+			b.add(
+				"textDocumentSync",
+				JsonBuilder.new()
+					.boo("openClose", text_document_sync.open_close)
+					.num("change", text_document_sync.change.v)
+					.build()
+			);
+		}
 
 		return b.build();
 	}
 	def logContent(log: Logger) {
-		log.puts("Text document sync options:"); log.indent(); {
-			log.put1("Open/close notifications: %s", if(text_document_sync.open_close, "true", "false"));
-			log.put2("Sync kind: %s(%d)", text_document_sync.change.name, text_document_sync.change.v);
-		} log.dedent();
+		if (text_document_sync != null) {
+			log.puts("Text document sync options:"); log.indent(); {
+				log.put1("Open/close notifications: %s", if(text_document_sync.open_close, "true", "false"));
+				log.put2("Sync kind: %s(%d)", text_document_sync.change.name, text_document_sync.change.v);
+			} log.dedent();
+		}
 	}
 }
-
-
