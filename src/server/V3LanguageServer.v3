@@ -17,12 +17,18 @@ class V3LanguageServer(config: ServerConfig, conn: IOStream<byte>) {
 	private def initialize(packet: IncomingData) {
 		var p = InitializePacket.!(packet);
 
-		var cap_data = ServerCapabilitiesData.new(ServerCapabilities.new());
+		var cap = getServerCapabilities();
 		var server_info = ServerInfo.new("Virgil Server :3", "0.1.0");
-		session.comm.send(ResponseMessage.Data(InitializeResult.new(cap_data, server_info)));
+		session.comm.sendData(InitializeResult.new(cap, server_info));
 	}
 
 	private def shutdown(packet: IncomingData) {
-		session.comm.send(ResponseMessage.Data(ShutdownResult.new()));
+		session.comm.sendData(ShutdownResult.new());
+	}
+
+	private def getServerCapabilities() -> ServerCapabilities {
+		var cap_data = ServerCapabilities.new();
+		cap_data.text_document_sync = TextDocumentSyncOptions(true, TextDocumentSyncKind.NONE);
+		return cap_data;
 	}
 }

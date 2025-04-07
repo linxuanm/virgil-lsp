@@ -36,23 +36,19 @@ class Communication(conn: IOStream<byte>) {
 		}
 	}
 
-	def send(payload: ResponseMessage) {
-		var b = JsonBuilder.new();
-		b.num("id", sent_id++);
-		match (payload) {
-			Data(v) => {
-				if (Log.packet) log.putBlock("Sending result packet:", v.logContent);
-				b.add("result", v.serialize());
-			}
-			Error(e) => {
-				if (Log.packet) log.putBlock("Sending error packet:", e.logContent);
-				b.add("error", e.serialize());
-			}
-		}
-		rpc.sendJson(b.build());
+	def sendData(data: OutgoingData) {
+		rpc.sendJson(newOutgoingData().add("result", data.serialize()).build());
+	}
+
+	def sendError(err: ResponseError) {
+		rpc.sendJson(newOutgoingData().add("error", err.serialize()).build());
 	}
 
 	def sendSimpleError(err: ErrorCodes) {
-		send(ResponseMessage.Error(ResponseError.new(err, err.name, null)));
+		sendError(ResponseError.new(err, err.name, null));
+	}
+
+	private def newOutgoingData() -> JsonBuilder {
+		return JsonBuilder.new().num("id", sent_id++);
 	}
 }
