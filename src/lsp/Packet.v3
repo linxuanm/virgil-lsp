@@ -16,11 +16,7 @@ enum IncomingDataKind(method: string, factory: () -> IncomingData) {
 	EXIT_PACKET("exit", EmptyPacket.new)
 }
 
-class ResponseError(
-	error: ErrorCodes,
-	message: string,
-	data: OutgoingData // nullable
-) extends OutgoingData {
+class ResponseError(error: ErrorCodes, message: string, data: OutgoingData) extends OutgoingData {
 	def serialize() -> JsonValue {
 		var b = JsonBuilder.new().num("code", error.code).str("message", message);
 		if (data != null) b.add("data", data.serialize());
