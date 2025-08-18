@@ -1,5 +1,14 @@
-class IncomingData extends JsonDeserializable { def logContent(log: Logger); }
-class OutgoingData extends JsonSerializable { def logContent(log: Logger); }
+class Loggable {
+	def logContent(log: Logger);
+}
+
+class IncomingData extends Loggable {
+	def deserialize(nav: JsonNav) -> bool;
+}
+
+class OutgoingData extends Loggable {
+	def serialize() -> JsonValue;
+}
 
 enum IncomingDataKind(method: string, factory: () -> IncomingData) {
 	INITIALIZE_PACKET("initialize", InitializePacket.new),
