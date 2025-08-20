@@ -14,7 +14,7 @@ class V3LanguageServer(config: ServerConfig, conn: IOStream<byte>) {
 		session.register_packet_subscriber("shutdown", shutdown);
 	}
 
-	private def initialize(packet: IncomingData) {
+	private def initialize(packet: Packet) {
 		var p = InitializePacket.!(packet);
 
 		var cap = getServerCapabilities();
@@ -22,7 +22,7 @@ class V3LanguageServer(config: ServerConfig, conn: IOStream<byte>) {
 		session.comm.sendData(InitializeResult.new(cap, server_info));
 	}
 
-	private def shutdown(packet: IncomingData) {
+	private def shutdown(packet: Packet) {
 		session.comm.sendData(ShutdownResult.new());
 	}
 

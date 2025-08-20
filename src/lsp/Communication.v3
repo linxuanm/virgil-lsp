@@ -1,6 +1,6 @@
 type ReadPacketResult {
 	case RPCError(err: ErrorCodes);
-	case Success(method: string, packet: IncomingData);
+	case Success(method: string, packet: Packet);
 }
 
 class Communication(conn: IOStream<byte>) {
@@ -24,7 +24,10 @@ class Communication(conn: IOStream<byte>) {
 							var msg = Strings.format1("Failed to deserialize packet of method \"%s\"", method);
 							return ReadPacketResult.RPCError(ErrorCodes.INVALID_PARAMS);
 						}
-						if (Log.packet) log.putBlock(Strings.format1("Read \"%s\" packet:", method), packet.logContent);
+						if (Log.packet) {
+							var title = Strings.format1("Read \"%s\" packet:", method);
+							log.putBlock(title, Logger.putJson(_, null, packet.serialize()));
+						}
 						return ReadPacketResult.Success(method, packet);
 					}
 				}
@@ -36,7 +39,7 @@ class Communication(conn: IOStream<byte>) {
 		}
 	}
 
-	def sendData(data: OutgoingData) {
+	def sendData(data: Packet) {
 		rpc.sendJson(newOutgoingData().add("result", data.serialize()).build());
 	}
 

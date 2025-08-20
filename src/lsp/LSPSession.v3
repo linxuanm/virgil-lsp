@@ -10,7 +10,7 @@ class LSPSession(config: ServerConfig, conn: IOStream<byte>) {
 
 	def log = Logger.new("session");
 	def comm = Communication.new(conn);
-	def subscriber = EventBusSubscriber<IncomingData>.new();
+	def subscriber = EventBusSubscriber<Packet>.new();
 
 	var state = SessionState.UNINITIALIZED;
 	var exit_code = 0;
@@ -23,17 +23,17 @@ class LSPSession(config: ServerConfig, conn: IOStream<byte>) {
 		register_packet_subscriber("exit", exit);
 	}
 
-	def initialize(packet: IncomingData) {
+	def initialize(packet: Packet) {
 		state = SessionState.RUNNING;
 		if (Log.session) log.puts("Session started.");
 	}
 
-	def shutdown(packet: IncomingData) {
+	def shutdown(packet: Packet) {
 		state = SessionState.SHUTDOWN;
 		if (Log.session) log.puts("Session received SHUTDOWN.");
 	}
 
-	def exit(packet: IncomingData) {
+	def exit(packet: Packet) {
 		if (Log.session) log.puts("Session received EXIT.");
 		if (state != SessionState.SHUTDOWN) {
 			Log.err.puts("Session did not receive SHUTDOWN before EXIT.");

@@ -3,7 +3,7 @@
 enum TextDocumentSyncKind(v: int) { NONE(0), FULL(1), INCREMENTAL(2) }
 class TextDocumentSyncOptions(open_close: bool, change: TextDocumentSyncKind) {}
 
-class ServerCapabilities extends OutgoingData {
+class ServerCapabilities extends Packet {
 	var text_document_sync: TextDocumentSyncOptions;
 	def serialize() -> JsonValue {
 		var b = JsonBuilder.new();
@@ -18,13 +18,5 @@ class ServerCapabilities extends OutgoingData {
 		}
 
 		return b.build();
-	}
-	def logContent(log: Logger) {
-		if (text_document_sync != null) {
-			log.puts("Text document sync options:"); log.indent(); {
-				log.put1("Open/close notifications: %s", if(text_document_sync.open_close, "true", "false"));
-				log.put2("Sync kind: %s(%d)", text_document_sync.change.name, text_document_sync.change.v);
-			} log.dedent();
-		}
 	}
 }

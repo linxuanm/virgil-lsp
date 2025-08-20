@@ -1,48 +1,34 @@
-class Loggable {
-	def logContent(log: Logger);
-}
-
-class IncomingData extends Loggable {
+class Packet {
+	def serialize() -> JsonValue;
 	def deserialize(nav: JsonNav) -> bool;
 }
 
-class OutgoingData extends Loggable {
-	def serialize() -> JsonValue;
-}
-
-enum IncomingDataKind(method: string, factory: () -> IncomingData) {
+enum IncomingDataKind(method: string, factory: () -> Packet) {
 	INITIALIZE_PACKET("initialize", InitializePacket.new),
 	SHUTDOWN_PACKET("shutdown", EmptyPacket.new),
 	EXIT_PACKET("exit", EmptyPacket.new)
 }
 
-class ResponseError(error: ErrorCodes, message: string, data: OutgoingData) extends OutgoingData {
+class ResponseError(error: ErrorCodes, message: string, data: Packet) extends Packet {
 	def serialize() -> JsonValue {
 		var b = JsonBuilder.new().num("code", error.code).str("message", message);
 		if (data != null) b.add("data", data.serialize());
 		return b.build();
 	}
-	def logContent(log: Logger) {
-		log.put2("Error code: %d (%s)", error.code, error.name);
-		log.put1("Message: %s", message);
-		if (data != null) log.putBlock("Data:", data.logContent);
-	}
 }
 
 // If you want to subscribe to an unsupported/WIP method, use this.
-class UnsupportedMethodPacket extends IncomingData {
+class UnsupportedMethodPacket extends Packet {
 	var data: JsonNav;
 	def deserialize(nav: JsonNav) -> bool { data = nav; return true; }
-	def logContent(log: Logger) { log.puts("<unsupported method packet>"); }
 }
 
 // Used for packets without a payload, e.g., shutdown or exit.
-class EmptyPacket extends IncomingData {
+class EmptyPacket extends Packet {
 	def deserialize(nav: JsonNav) -> bool { return true; }
-	def logContent(log: Logger) { log.puts("<empty packet>"); }
 }
 
-class InitializePacket extends IncomingData {
+class InitializePacket extends Packet {
 	var process_id: int;
 	var client_info: ClientInfo; // nullable
 	var root_path: string;
@@ -58,27 +44,18 @@ class InitializePacket extends IncomingData {
 		// TODO: handle client capabilities
 		return nav.ok;
 	}
-	def logContent(log: Logger) {
-		log.put1("Parent process ID: %d", process_id);
-		if (client_info != null) log.putBlock("Client info:", client_info.logContent);
-	}
 }
 
 class InitializeResult(
 	capabilities: ServerCapabilities,
 	server_info: ServerInfo // nullable
-) extends OutgoingData {
+) extends Packet {
 	def serialize() -> JsonValue {
 		var b = JsonBuilder.new().add("capabilities", capabilities.serialize());
 		if (server_info != null) b.add("serverInfo", server_info.serialize());
 		return b.build();
 	}
-	def logContent(log: Logger) {
-		log.putBlock("Capabilities:", capabilities.logContent);
-		if (server_info != null) log.putBlock("Server info:", server_info.logContent);
-	}
 }
-class ShutdownResult extends OutgoingData {
+class ShutdownResult extends Packet {
 	def serialize() -> JsonValue { return JsonValue.Null; }
-	def logContent(log: Logger) { log.puts("Shutdown"); }
 }
