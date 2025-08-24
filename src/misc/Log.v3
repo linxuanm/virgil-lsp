@@ -40,18 +40,18 @@ class Logger(name: string) {
 
 	def putJson(/*nullable*/ name: string, value: JsonValue) {
 		var prefix = if(name == null, "", Strings.format1("%s: ", name));
-		// match(value) {
-		// 	String, Int, Bool, Null => put2("%s%q", prefix, value.render);
-		// 	JArray => put1("%s<JArray>", prefix);
-		// 	JObject(v) => {
-		// 		if (name != null) { puts(prefix); indent(); }
-		// 		var pairs = MapCollector.new(Strings.asciiLt, v).extract();
-		// 		for (i < pairs.length) {
-		// 			putJson(pairs[i].0, pairs[i].1);
-		// 		}
-		// 		if (name != null) { dedent(); }
-		// 	}
-		// }
+		match(value) {
+			String, Int, Bool, Null => put2("%s%q", prefix, value.render);
+			JArray => put1("%s<JArray>", prefix);
+			JObject(v) => {
+				if (name != null) { puts(prefix); indent(); }
+				var pairs = MapCollector.new(Strings.asciiLt, v).extract();
+				for (i < pairs.length) {
+					putJson(pairs[i].0, pairs[i].1);
+				}
+				if (name != null) { dedent(); }
+			}
+		}
 	}
 }
 
