@@ -1,6 +1,6 @@
-type ReadPacketResult {
+type ReadResult {
 	case RPCError(err: ErrorCodes);
-	case Success(method: string, packet: Packet);
+	case Success(method: string, params: JsonNav);
 }
 
 class Communication(conn: IOStream<byte>) {
@@ -8,47 +8,39 @@ class Communication(conn: IOStream<byte>) {
 	def rpc = RPC.new(conn);
 
 	var sent_id = 0;
-	
-	def read() -> ReadPacketResult {
+
+	def read() -> ReadResult {
 		match (rpc.readJson()) {
-			Fail(e) => return ReadPacketResult.RPCError(e);
+			Fail(e) => return ReadResult.RPCError(e);
 			Success(data) => {
 				var r = JsonNav.new("packet", null, data);
 				var method = r.readS("method");
 				var params = r.readOD("params", null);
-				if (!r.ok) return ReadPacketResult.RPCError(ErrorCodes.PARSE_ERROR);
-				for (k in IncomingDataKind) {
-					if (Strings.equal(method, k.method)) {
-						var packet = k.factory();
-						if (!packet.deserialize(params)) {
-							var msg = Strings.format1("Failed to deserialize packet of method \"%s\"", method);
-							return ReadPacketResult.RPCError(ErrorCodes.INVALID_PARAMS);
-						}
-						if (Log.packet) {
-							var title = Strings.format1("Read \"%s\" packet:", method);
-							log.putBlock(title, Logger.putJson(_, null, packet.serialize()));
-						}
-						return ReadPacketResult.Success(method, packet);
+				if (!r.ok) return ReadResult.RPCError(ErrorCodes.PARSE_ERROR);
+				if (Log.packet) {
+					var title = Strings.format1("Read \"%s\":", method);
+					if (params != null) {
+						log.putBlock(title, Logger.putJson(_, null, params.obj));
+					} else {
+						log.puts(title);
 					}
 				}
-				if (Log.packet) log.put1("Unsupported method \"%s\", falling through.", method);
-				var packet = UnsupportedMethodPacket.new();
-				packet.deserialize(params);
-				return ReadPacketResult.Success(method, packet);
+				return ReadResult.Success(method, params);
 			}
 		}
 	}
 
-	def sendData(data: Packet) {
-		rpc.sendJson(newOutgoingData().add("result", data.serialize()).build());
+	def sendResult(result: JsonValue) {
+		rpc.sendJson(newOutgoingData().add("result", result).build());
 	}
 
-	def sendError(err: ResponseError) {
-		rpc.sendJson(newOutgoingData().add("error", err.serialize()).build());
+	def sendError(err: ErrorCodes, message: string) {
+		var error = JsonBuilder.new().num("code", err.code).str("message", message).build();
+		rpc.sendJson(newOutgoingData().add("error", error).build());
 	}
 
 	def sendSimpleError(err: ErrorCodes) {
-		sendError(ResponseError.new(err, err.name, null));
+		sendError(err, err.name);
 	}
 
 	private def newOutgoingData() -> JsonBuilder {

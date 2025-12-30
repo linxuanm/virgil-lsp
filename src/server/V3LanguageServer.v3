@@ -10,25 +10,36 @@ class V3LanguageServer(config: ServerConfig, conn: IOStream<byte>) {
 	}
 
 	private def registerEvents() {
-		session.register_packet_subscriber("initialize", initialize);
-		session.register_packet_subscriber("shutdown", shutdown);
+		session.register("initialize", initialize);
+		session.register("shutdown", shutdown);
 	}
 
-	private def initialize(packet: Packet) {
-		var p = InitializePacket.!(packet);
+	private def initialize(params: JsonNav) {
+		// Read client info if needed:
+		// var process_id = params.readN("processId");
+		// var client_info = params.readOD("clientInfo", null);
+		// var root_path = params.readS("rootPath");
 
-		var cap = getServerCapabilities();
-		var server_info = ServerInfo.new("Virgil Server :3", "0.1.0");
-		session.comm.sendData(InitializeResult.new(cap, server_info));
+		var result = JsonBuilder.new()
+			.add("capabilities", getServerCapabilities())
+			.add("serverInfo", JsonBuilder.new()
+				.str("name", "Virgil Server :3")
+				.str("version", "0.1.0")
+				.build())
+			.build();
+		session.comm.sendResult(result);
 	}
 
-	private def shutdown(packet: Packet) {
-		session.comm.sendData(ShutdownResult.new());
+	private def shutdown(params: JsonNav) {
+		session.comm.sendResult(JsonValue.Null);
 	}
 
-	private def getServerCapabilities() -> ServerCapabilities {
-		var cap_data = ServerCapabilities.new();
-		cap_data.text_document_sync = TextDocumentSyncOptions.new(true, TextDocumentSyncKind.NONE);
-		return cap_data;
+	private def getServerCapabilities() -> JsonValue {
+		return JsonBuilder.new()
+			.add("textDocumentSync", JsonBuilder.new()
+				.boo("openClose", true)
+				.num("change", TextDocumentSyncKind.NONE.v)
+				.build())
+			.build();
 	}
 }
