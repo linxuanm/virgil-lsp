@@ -1,0 +1,126 @@
+def T = UnitTests.registerT("lsp:event:", _, EventTester.new, _);
+def X_ = void(
+	T("register_and_fire", test_register_and_fire),
+	T("multiple_subscribers", test_multiple_subscribers),
+	T("no_subscribers", test_no_subscribers),
+	T("event_isolation", test_event_isolation),
+	T("fire_order", test_fire_order),
+	T("register_returns_this", test_register_returns_this),
+	()
+);
+
+private class EventTester(t: Tester) {
+}
+
+// Helper class to capture int handler state
+private class IntCapture {
+	var called = false;
+	var value = -1;
+	var count = 0;
+
+	def handler(data: int) {
+		called = true;
+		value = data;
+		count++;
+	}
+}
+
+// Helper class to capture string handler state
+private class StringCapture {
+	var called = false;
+
+	def handler(data: string) {
+		called = true;
+	}
+}
+
+// Helper class to track order of handler calls
+private class OrderCapture {
+	var order = Vector<int>.new();
+
+	def handler1(data: int) { order.put(1); }
+	def handler2(data: int) { order.put(2); }
+	def handler3(data: int) { order.put(3); }
+}
+
+def test_register_and_fire(t: EventTester) {
+	var bus = EventBusSubscriber<int>.new();
+	var capture = IntCapture.new();
+
+	bus.register("test", capture.handler);
+	bus.fire("test", 42);
+
+	t.t.assert(capture.called, "handler should have been called");
+	t.t.asserti(42, capture.value);
+}
+
+def test_multiple_subscribers(t: EventTester) {
+	var bus = EventBusSubscriber<int>.new();
+	var c1 = IntCapture.new();
+	var c2 = IntCapture.new();
+	var c3 = IntCapture.new();
+
+	bus.register("test", c1.handler);
+	bus.register("test", c2.handler);
+	bus.register("test", c3.handler);
+
+	bus.fire("test", 0);
+
+	t.t.asserti(1, c1.count);
+	t.t.asserti(1, c2.count);
+	t.t.asserti(1, c3.count);
+}
+
+def test_no_subscribers(t: EventTester) {
+	var bus = EventBusSubscriber<int>.new();
+	// Should not crash when firing with no subscribers
+	bus.fire("nonexistent", 42);
+	t.t.assert(true, "should not crash");
+}
+
+def test_event_isolation(t: EventTester) {
+	var bus = EventBusSubscriber<string>.new();
+	var captureA = StringCapture.new();
+	var captureB = StringCapture.new();
+
+	bus.register("eventA", captureA.handler);
+	bus.register("eventB", captureB.handler);
+
+	bus.fire("eventA", "data");
+
+	t.t.assert(captureA.called, "eventA handler should have been called");
+	t.t.assert(!captureB.called, "eventB handler should not have been called");
+}
+
+def test_fire_order(t: EventTester) {
+	var bus = EventBusSubscriber<int>.new();
+	var capture = OrderCapture.new();
+
+	bus.register("test", capture.handler1);
+	bus.register("test", capture.handler2);
+	bus.register("test", capture.handler3);
+
+	bus.fire("test", 0);
+
+	t.t.asserta("order", [1, 2, 3], capture.order.extract(), StringBuilder.putd_i32);
+}
+
+def test_register_returns_this(t: EventTester) {
+	var bus = EventBusSubscriber<int>.new();
+	var cA = IntCapture.new();
+	var cB = IntCapture.new();
+	var cC = IntCapture.new();
+
+	// Test method chaining
+	bus.register("a", cA.handler)
+	   .register("b", cB.handler)
+	   .register("c", cC.handler);
+
+	bus.fire("a", 0);
+	bus.fire("b", 0);
+	bus.fire("c", 0);
+
+	t.t.asserti(1, cA.count);
+	t.t.asserti(1, cB.count);
+	t.t.asserti(1, cC.count);
+}

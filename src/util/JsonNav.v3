@@ -1,0 +1,101 @@
+// A wrapper for navigating JSON objects with error handling and type safety.
+class JsonNav(name: string, owner: JsonNav, obj: JsonValue.JObject) extends Throwable<string> {
+	def path: string = if(owner == null, name, Strings.format2("%s.%s", owner.path, name));
+	def suffix = Strings.format1("(at \"%s\")", path);
+	
+	def errExpectedType<T>(key: string, value: JsonValue, expected: string) -> T {
+		var msg = Strings.format3(
+			"expected key \"%s\" to have type %s, got %q",
+			key, expected, getTypeName(value)
+		);
+		return err(Strings.format2("%s %s", msg, suffix));
+	}
+	
+	def assertHas(key: string) -> bool {
+		return if(obj.v.has(key), true, err(Strings.format2("expected key \"%s\" %s", key, suffix)));
+	}
+	
+	def readType(key: string, expected: string, typeCheck: JsonValue -> bool) -> JsonValue {
+		if (!assertHas(key)) return JsonValue.Null;
+		var val = obj.v[key];
+		if (!typeCheck(val)) return errExpectedType(key, val, expected);
+		return val;
+	}
+	
+	def readS(key: string) -> string {
+		var res = readType(key, "string", JsonValue.String.?);
+		if (!ok) return null;
+		return JsonValue.String.!(res).v;
+	}
+	
+	def readN(key: string) -> int {
+		var res = readType(key, "number", JsonValue.Int.?);
+		if (!ok) return 0;
+		return JsonValue.Int.!(res).v;
+	}
+	
+	def readB(key: string) -> bool {
+		var res = readType(key, "bool", JsonValue.Bool.?);
+		if (!ok) return false;
+		return JsonValue.Bool.!(res).v;
+	}
+	
+	def readA(key: string) -> Array<JsonValue> {
+		var res = readType(key, "array", JsonValue.JArray.?);
+		if (!ok) return null;
+		return JsonValue.JArray.!(res).v;
+	}
+	
+	def readO(key: string) -> JsonNav {
+		var res = readType(key, "object", JsonValue.JObject.?);
+		if (!ok) return null;
+		return JsonNav.new(key, this, JsonValue.JObject.!(res));
+	}
+	
+	// Typed-reads with default value.
+	def readSD(key: string, default: string) -> string {
+		if (!obj.v.has(key)) return default;
+		var res = readType(key, "string", JsonValue.String.?);
+		if (!ok) return null;
+		return JsonValue.String.!(res).v;
+	}
+	
+	def readND(key: string, default: int) -> int {
+		if (!obj.v.has(key)) return default;
+		var res = readType(key, "number", JsonValue.Int.?);
+		if (!ok) return 0;
+		return JsonValue.Int.!(res).v;
+	}
+	
+	def readBD(key: string, default: bool) -> bool {
+		if (!obj.v.has(key)) return default;
+		var res = readType(key, "bool", JsonValue.Bool.?);
+		if (!ok) return false;
+		return JsonValue.Bool.!(res).v;
+	}
+	
+	def readAD(key: string, default: Array<JsonValue>) -> Array<JsonValue> {
+		if (!obj.v.has(key)) return default;
+		var res = readType(key, "array", JsonValue.JArray.?);
+		if (!ok) return null;
+		return JsonValue.JArray.!(res).v;
+	}
+	
+	def readOD(key: string, default: JsonNav) -> JsonNav {
+		if (!obj.v.has(key)) return default;
+		var res = readType(key, "object", JsonValue.JObject.?);
+		if (!ok) return null;
+		return JsonNav.new(key, this, JsonValue.JObject.!(res));
+	}
+	
+	private def getTypeName(value: JsonValue) -> string {
+		match (value) {
+			String => return "string";
+			Int => return "number";
+			Bool => return "bool";
+			Null => return "null";
+			JArray => return "array";
+			JObject => return "object";
+		}
+	}
+}

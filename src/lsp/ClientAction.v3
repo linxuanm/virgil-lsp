@@ -1,0 +1,5 @@
+// Actions that can be sent to the client to be displayed in the editor.
+
+class ClientActionDispatcher {
+
+}

@@ -27,7 +27,8 @@ fi
 
 # Virgil libraries.
 
-V3_UTIL="$VIRGIL_LIB/util/*.v3"
+V3_JSON="$VIRGIL_LIB/file/json/*.v3"
+V3_UTIL="$VIRGIL_LIB/util/*.v3 $V3_JSON"
 V3_TEST="$VIRGIL_LIB/test/*.v3"
 
 
